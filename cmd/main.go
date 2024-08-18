@@ -164,19 +164,19 @@ func NewAzTuiState() *AzTuiState {
 
 			// Read and print stdout and stderr
 			stdoutStr := stdoutBuf.String()
-			//stderrStr := stderrBuf.String()
-
-			//a.serialConsoleView.Write([]byte("stdout: " + stdoutStr))
-			//a.serialConsoleView.Write([]byte("stderr: " + stderrStr))
 
 			a.vmActionList = tview.NewList()
 			vmCommandPairs := strings.Split(stdoutStr, "Commands:")[1]
 			for _, commandPair := range strings.Split(vmCommandPairs, "\n") {
+				if commandPair == "" {
+					continue
+				}
+
 				pair := strings.Split(commandPair, ":")
 				if len(pair) != 2 {
 					continue
 				}
-				a.vmActionList.AddItem(pair[0], "", 0, func() {
+				a.vmActionList.AddItem(pair[0], pair[1], 0, func() {
 					vmName, _ := a.virtualMachineList.GetItemText(a.virtualMachineList.GetCurrentItem())
 					rgName, _ := a.resourceGroupList.GetItemText(a.resourceGroupList.GetCurrentItem())
 					actionName, _ := a.vmActionList.GetItemText(a.vmActionList.GetCurrentItem())
@@ -201,12 +201,6 @@ func NewAzTuiState() *AzTuiState {
 
 					a.serialConsoleView.Write([]byte(fmt.Sprintf("stdout: %v\nstderr: %v\n", stdoutBuf.String(), stderrBuf.String())))
 
-					// Read and print stdout and stderr
-					//stdoutStr := stdoutBuf.String()
-					//stderrStr := stderrBuf.String()
-
-					//a.serialConsoleView.Write([]byte("stdout: " + stdoutStr))
-					//a.serialConsoleView.Write([]byte("stderr: " + stderrStr))
 					a.grid.RemoveItem(a.vmActionList)
 					a.grid.AddItem(a.serialConsoleView, 1, 3, 1, 1, 0, 100, false)
 					a.app.SetFocus(a.serialConsoleView)
