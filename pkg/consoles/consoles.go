@@ -12,14 +12,14 @@ func StartSerialConsoleMonitor(subscriptionID string, resourceGroupName string, 
 	monitorSerial := func(subscriptionID string, resourceGroupName string, vmName string) {
 		conn, err := azconsoles.StartSerialConsole(subscriptionID, resourceGroupName, vmName)
 		if err != nil {
-			log.Info("%v", err)
+			log.Printf("%v\n", err)
 			return
 		}
 
 		for {
 			rxBuf, err := wsutil.ReadServerText(conn)
 			if err != nil {
-				log.Info("%v", err)
+				log.Printf("%v\n", err)
 				return
 			}
 
