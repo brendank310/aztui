@@ -46,7 +46,7 @@ tarball:
 	tar czf $(TARBALL) --transform "s,^,$(BINARY_NAME)-$(VERSION)/," -C $(SRC_DIR) .
 
 # Prepare RPM directories and .spec file
-prepare_rpm_structure:
+prepare_rpm_structure: tarball
 	@mkdir -p $(SPECDIR) $(SOURCEDIR) $(BUILDDIR)
 
 	# Create SPEC file using echo to avoid any target pattern issues
