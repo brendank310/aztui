@@ -18,11 +18,17 @@ jobs:
     - name: Build
       run: make all
     - name: Test
-      run: go test -v ./...
+      run: go test -v ./...      
+    - name: Generate RPM Spec
+      run: make rpm
+    - name: RPM Build
+      uses: naveenrajm7/rpmbuild@v1.0.0
+      with:
+        spec_file: rpmbuild/SPECS/aztui.spec
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4.3.4
       with:
         # Artifact name
         name: banjo # optional, default is artifact
         # A file, directory or wildcard pattern that describes what to upload
-        path: bin/banjo 
+        path: bin/aztui 
