@@ -31,7 +31,7 @@ func NewSubscriptionListView() *SubscriptionListView {
 }
 
 func ProcessSelection(subscriptionID string) error {
-
+	return nil
 }
 
 func (s *SubscriptionListView) Update(selectedFunc func()) error {
