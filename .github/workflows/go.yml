@@ -29,6 +29,6 @@ jobs:
       uses: actions/upload-artifact@v4.3.4
       with:
         # Artifact name
-        name: banjo # optional, default is artifact
+        name: aztui # optional, default is artifact
         # A file, directory or wildcard pattern that describes what to upload
         path: bin/aztui 
