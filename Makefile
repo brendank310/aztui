@@ -56,14 +56,14 @@ prepare_rpm_structure: tarball
 	@echo "Name:           $(BINARY_NAME)" > $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "Version:        $(VERSION)" >> $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "Release:        $(RELEASE)" >> $(SPECDIR)/$(BINARY_NAME).spec
-	@echo "Summary:        My Go binary packaged for CBL Mariner" >> $(SPECDIR)/$(BINARY_NAME).spec
-	@echo "License:        MIT" >> $(SPECDIR)/$(BINARY_NAME).spec
-	@echo "URL:            http://example.com" >> $(SPECDIR)/$(BINARY_NAME).spec
+	@echo "Summary:        A text UI for managing Azure resources" >> $(SPECDIR)/$(BINARY_NAME).spec
+	@echo "License:        Apache2" >> $(SPECDIR)/$(BINARY_NAME).spec
+	@echo "URL:            http://github.com/brendank310/aztui" >> $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "Source0:        $(TARBALL)" >> $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "BuildArch:      $(ARCH)" >> $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "" >> $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "%description" >> $(SPECDIR)/$(BINARY_NAME).spec
-	@echo "A Go application packaged for CBL Mariner." >> $(SPECDIR)/$(BINARY_NAME).spec
+	@echo "A text UI for managing Azure resources." >> $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "" >> $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "%prep" >> $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "%setup -q" >> $(SPECDIR)/$(BINARY_NAME).spec
@@ -72,11 +72,11 @@ prepare_rpm_structure: tarball
 	@echo "go build -o $(DESTDIR)/$(BINARY_NAME) $(SRC_DIR)/cmd/main.go" >> $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "" >> $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "%install" >> $(SPECDIR)/$(BINARY_NAME).spec
-	@echo "install -D -m 0755 $(DESTDIR)/$(BINARY_NAME) $(BUILDROOT)$(BINDIR)/$(BINARY_NAME)" >> $(SPECDIR)/$(BINARY_NAME).spec
+	@echo "install -D -m 0755 $(DESTDIR)/$(BINARY_NAME) \$(BUILDROOT)$(BINDIR)/$(BINARY_NAME)" >> $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "" >> $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "%files" >> $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "$(BINDIR)/$(BINARY_NAME)" >> $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "" >> $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "%changelog" >> $(SPECDIR)/$(BINARY_NAME).spec
-	@echo "* $(shell date +"%a %b %d %Y") Me <me@example.com> - $(VERSION)-$(RELEASE)" >> $(SPECDIR)/$(BINARY_NAME).spec
+	@echo "* $(shell date +"%a %b %d %Y") Brendan Kerrigan <bkerrig1@binghamton.edu> - $(VERSION)-$(RELEASE)" >> $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "- Initial package" >> $(SPECDIR)/$(BINARY_NAME).spec
