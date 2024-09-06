@@ -28,5 +28,5 @@ jobs:
       run: make rpm
     - name: Build RPM
       uses: biohuns/rpmbuild-centos8-action@v1.0.0
-      with:
-        spec_file: rpmbuild/SPECS/aztui.spec
+      env:
+        INPUT_SPEC_FILE: rpmbuild/SPECS/aztui.spec
