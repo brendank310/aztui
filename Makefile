@@ -6,7 +6,7 @@ RELEASE ?= 1
 ARCH ?= $(shell uname -m)
 RPMBUILD_DIR ?= $(PWD)/rpmbuild
 TARBALL ?= $(BINARY_NAME)-$(VERSION).tar.gz
-SRC_DIR ?= $(PWD)
+SRC_DIR ?= $(PWD)/src
 
 # Directories
 BINDIR ?= /usr/bin
