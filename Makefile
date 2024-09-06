@@ -1,5 +1,5 @@
 # Variables
-DESTDIR ?= $(PWD)/bin
+DESTDIR ?= bin
 BINARY_NAME ?= aztui
 VERSION ?= 0.0.1
 RELEASE ?= 1
@@ -18,7 +18,7 @@ $(DESTDIR):
 	mkdir -p $(DESTDIR)
 
 $(DESTDIR)/$(BINARY_NAME): $(DESTDIR) $(shell find . -name "*.go")
-	go build -o $(DESTDIR)/$(BINARY_NAME) cmd/main.go
+	go build -o bin/$(BINARY_NAME) cmd/main.go
 
 clean:
 	rm -rf $(DESTDIR)
