@@ -44,8 +44,9 @@ srpm: prepare_rpm_structure tarball
 
 # Create tarball for source RPM
 tarball:
+	@mkdir -p $(SOURCEDIR)
 	# Create source tarball including current directory (SRC_DIR)
-	tar czf $(TARBALL) --transform "s,^,$(BINARY_NAME)-$(VERSION)/," -C $(SRC_DIR) .
+	tar czf $(SOURCEDIR)/$(TARBALL) --transform "s,^,$(BINARY_NAME)-$(VERSION)/," -C $(SRC_DIR) .
 
 # Prepare RPM directories and .spec file
 prepare_rpm_structure: tarball
