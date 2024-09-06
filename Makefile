@@ -69,7 +69,7 @@ prepare_rpm_structure: tarball
 	@echo "%setup -q" >> $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "" >> $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "%build" >> $(SPECDIR)/$(BINARY_NAME).spec
-	@echo "go build -o %{BUILDROOT}$(BINDIR)/$(BINARY_NAME) cmd/main.go" >> $(SPECDIR)/$(BINARY_NAME).spec
+	@echo "go build -o $(BINARY_NAME) cmd/main.go" >> $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "" >> $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "%install" >> $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "install -D -m 0755 $(BINARY_NAME) %{BUILDROOT}$(BINDIR)/$(BINARY_NAME)" >> $(SPECDIR)/$(BINARY_NAME).spec
