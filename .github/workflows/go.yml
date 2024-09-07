@@ -20,9 +20,7 @@ jobs:
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4.3.4
       with:
-        # Artifact name
         name: aztui # optional, default is artifact
-        # A file, directory or wildcard pattern that describes what to upload
         path: bin/aztui
     - name: Build RPM image
         run: |
