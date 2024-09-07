@@ -28,7 +28,7 @@ jobs:
     - name: Copy rpm file from Docker image
       run: |
         CONTAINER_ID=$(docker create aztui-rpm)
-        docker cp $CONTAINER_ID:/workdir/RPMS bin/RPMS
+        docker cp $CONTAINER_ID:/workdir/rpmbuild/RPMS bin/RPMS
         docker rm -f $CONTAINER_ID
     - name: Upload artifact
       uses: actions/upload-artifact@v3
