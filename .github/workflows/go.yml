@@ -23,15 +23,15 @@ jobs:
         name: aztui # optional, default is artifact
         path: bin/aztui
     - name: Build RPM image
-        run: |
-          docker build -t aztui-rpm -f images/Dockerfile.rpm .
+      run: |
+        docker build -t aztui-rpm -f images/Dockerfile.rpm .
     - name: Copy rpm file from Docker image
-        run: |
-          CONTAINER_ID=$(docker create aztui-rpm)
-          docker cp $CONTAINER_ID:/workdir/RPMS bin/RPMS
-          docker rm -f $CONTAINER_ID
+      run: |
+        CONTAINER_ID=$(docker create aztui-rpm)
+        docker cp $CONTAINER_ID:/workdir/RPMS bin/RPMS
+        docker rm -f $CONTAINER_ID
     - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: mariner-rpm
-          path: bin/RPMS
+      uses: actions/upload-artifact@v3
+      with:
+        name: mariner-rpm
+        path: bin/RPMS
