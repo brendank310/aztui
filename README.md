@@ -1,4 +1,4 @@
-# Banjo AzTUI
+# AzTUI
 [![Go](https://github.com/brendank310/aztui/actions/workflows/go.yml/badge.svg)](https://github.com/brendank310/aztui/actions/workflows/go.yml)
 
 A work in progress text user interface for controlling your Azure resources. Code is currently a mess, but the plan is clean it up and add functionality as time goes on.
