@@ -24,7 +24,7 @@ jobs:
         path: bin/aztui
     - name: Build RPM image
       run: |
-        docker build -t aztui-rpm -f images/Dockerfile.rpm .
+        docker build -t aztui-rpm -f images/Dockerfile.package .
     - name: Copy rpm file from Docker image
       run: |
         CONTAINER_ID=$(docker create aztui-rpm)
