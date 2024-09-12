@@ -30,7 +30,7 @@ func NewSubscriptionListView() *SubscriptionListView {
 	return &s
 }
 
-func ProcessSelection(subscriptionID string) error {
+func (s *SubscriptionListView) SpawnResourceGroupListView(subscriptionID string) *ResourceGroupListView {
 	return nil
 }
 

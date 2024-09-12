@@ -28,6 +28,7 @@ func NewVirtualMachineListView(subscriptionID string, resourceGroup string) *Vir
 
 	vm.List.SetBorder(true)
 	vm.List.Box.SetTitle(title)
+	vm.List.ShowSecondaryText(false)
 	vm.ActionBarText = "## Subscription List(F1) ## | ## Resource Group List(F2) ## | ## Run Command(F5) ## | ## Serial Console (F7) ## | ## Exit(F12) ##"
 	vm.SubscriptionID = subscriptionID
 	vm.ResourceGroup = resourceGroup

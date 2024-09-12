@@ -26,6 +26,7 @@ func NewResourceGroupListView(subscriptionID string) *ResourceGroupListView {
 
 	rg.List.SetBorder(true)
 	rg.List.Box.SetTitle(title)
+	rg.List.ShowSecondaryText(false)
 	rg.ActionBarText = "## Select(Enter) ## | ## Exit(F12) ##"
 	rg.SubscriptionID = subscriptionID
 
