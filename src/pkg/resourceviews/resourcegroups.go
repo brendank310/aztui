@@ -4,22 +4,22 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/rivo/tview"
 	"github.com/brendank310/aztui/pkg/config"
 	"github.com/brendank310/aztui/pkg/layout"
+	"github.com/rivo/tview"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 )
 
-var resourceGroupSelectItemFuncMap = map[string]func(*ResourceGroupListView,string) tview.Primitive {
+var resourceGroupSelectItemFuncMap = map[string]func(*ResourceGroupListView, string) tview.Primitive{
 	"SpawnVirtualMachineListView": (*ResourceGroupListView).SpawnVirtualMachineListView,
 }
 
 func callResourceGroupMethodByName(view *ResourceGroupListView, methodName string, resourceGroup string) tview.Primitive {
 	// Check if the method exists in the map and call it with the receiver
 	if method, exists := resourceGroupSelectItemFuncMap[methodName]; exists {
-		return method(view, resourceGroup)  // Call the method with the receiver
+		return method(view, resourceGroup) // Call the method with the receiver
 	} else {
 		fmt.Printf("Method %s not found\n", methodName)
 	}
@@ -28,11 +28,11 @@ func callResourceGroupMethodByName(view *ResourceGroupListView, methodName strin
 }
 
 type ResourceGroupListView struct {
-	List *tview.List
-	StatusBarText string
-	ActionBarText string
+	List           *tview.List
+	StatusBarText  string
+	ActionBarText  string
 	SubscriptionID string
-	Parent *layout.AppLayout
+	Parent         *layout.AppLayout
 }
 
 func NewResourceGroupListView(layout *layout.AppLayout, subscriptionID string) *ResourceGroupListView {
@@ -54,7 +54,6 @@ func NewResourceGroupListView(layout *layout.AppLayout, subscriptionID string) *
 
 func (r *ResourceGroupListView) SpawnVirtualMachineListView(resourceGroup string) tview.Primitive {
 	vmList := NewVirtualMachineListView(r.Parent, r.SubscriptionID, resourceGroup)
-
 	vmList.Update(func() {
 		vmName, _ := vmList.List.GetItemText(vmList.List.GetCurrentItem())
 		spawnedWidget := vmList.SelectItem(vmName)
@@ -62,7 +61,7 @@ func (r *ResourceGroupListView) SpawnVirtualMachineListView(resourceGroup string
 			r.Parent.AppendPrimitiveView(spawnedWidget)
 		}
 	})
-	return nil
+	return vmList.List
 }
 
 func (r *ResourceGroupListView) SelectItem(resourceGroup string) tview.Primitive {
