@@ -62,21 +62,21 @@ func (r *ResourceGroupListView) SpawnVirtualMachineListView(resourceGroup string
 			r.Parent.AppendPrimitiveView(spawnedWidget)
 		}
 	})
-	return nil
+
+	return vmList.List
 }
 
-func (r *ResourceGroupListView) SelectItem(resourceGroup string) tview.Primitive {
+func (r *ResourceGroupListView) SelectItem(resourceGroup string) {
 	symbolName := GetSymbolName()
 	typeName := ExtractTypeName(symbolName)
 	fnName := GetFunctionName(symbolName)
 
 	for _, action := range config.GConfig.Actions {
 		if typeName == action.Type && fnName == action.Condition {
-			return callResourceGroupMethodByName(r, action.Action, resourceGroup)
+			p := callResourceGroupMethodByName(r, action.Action, resourceGroup)
+			r.Parent.AppendPrimitiveView(p)
 		}
 	}
-
-	return nil
 }
 
 func (r *ResourceGroupListView) Update(selectedFunc func()) error {

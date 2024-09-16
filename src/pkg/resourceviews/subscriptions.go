@@ -43,8 +43,7 @@ func (s *SubscriptionListView) SpawnResourceGroupListView(subscriptionID string)
 	rgList := NewResourceGroupListView(s.Parent, subscriptionID)
 	rgList.Update(func() {
 		resourceGroup, _ := rgList.List.GetItemText(rgList.List.GetCurrentItem())
-		spawnedWidget := rgList.SelectItem(resourceGroup)
-		s.Parent.AppendPrimitiveView(spawnedWidget)
+		rgList.SelectItem(resourceGroup)
 	})
 
 	//s.ResourceGroupLists = append(s.ResourceGroupLists, *rgList)
@@ -128,7 +127,7 @@ func callSubscriptionMethodByName(view *SubscriptionListView, methodName string,
 	return nil
 }
 
-func (s *SubscriptionListView) SelectItem(subscriptionID string) tview.Primitive {
+func (s *SubscriptionListView) SelectItem(subscriptionID string) {
 	symbolName := GetSymbolName()
 	typeName := ExtractTypeName(symbolName)
 	fnName := GetFunctionName(symbolName)
@@ -136,11 +135,9 @@ func (s *SubscriptionListView) SelectItem(subscriptionID string) tview.Primitive
 	for _, action := range config.GConfig.Actions {
 		if typeName == action.Type && fnName == action.Condition {
 			p := callSubscriptionMethodByName(s, action.Action, subscriptionID)
-			return p
+			s.Parent.AppendPrimitiveView(p)
 		}
 	}
-
-	return nil
 }
 
 func (s *SubscriptionListView) Update(selectedFunc func()) error {

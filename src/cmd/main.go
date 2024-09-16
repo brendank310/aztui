@@ -36,7 +36,8 @@ func NewAzTuiState() *AzTuiState {
 	a.AppLayout.AppendPrimitiveView(subList.List)
 	subList.Update(func() {
 		_, subscriptionID := subList.List.GetItemText(subList.List.GetCurrentItem())
-		a.AppLayout.AppendPrimitiveView(subList.SelectItem(subscriptionID))
+		//a.AppLayout.AppendPrimitiveView()
+		subList.SelectItem(subscriptionID)
 	})
 
 	return &a
