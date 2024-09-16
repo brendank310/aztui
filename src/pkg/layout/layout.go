@@ -8,10 +8,10 @@ import (
 )
 
 type AppLayout struct {
-	App *tview.Application
-	Grid *tview.Grid
-	Layout *tview.Flex
-	titleBar *tview.TextView
+	App       *tview.Application
+	Grid      *tview.Grid
+	Layout    *tview.Flex
+	titleBar  *tview.TextView
 	actionBar *tview.TextView
 	statusBar *tview.TextView
 }
@@ -25,8 +25,8 @@ func NewAppLayout() *AppLayout {
 			SetColumns(-1).
 			SetRows(1, -6, 1, 1).
 			SetBorders(true),
-		Layout: tview.NewFlex(),
-		titleBar: tview.NewTextView().SetLabel("aztui"),
+		Layout:    tview.NewFlex(),
+		titleBar:  tview.NewTextView().SetLabel("aztui"),
 		actionBar: tview.NewTextView().SetLabel("Ctrl-C to exit"),
 		statusBar: tview.NewTextView().SetLabel(status),
 	}

@@ -98,7 +98,7 @@ func RunAzCommand(args []string, handleErrorFunc func([]string, error) error) (s
 	return stdoutBuf.String(), nil
 }
 
-func RunAzCommandPromptMissingArgs(args []string, promptUser func(string) (string,error)) (string, error) {
+func RunAzCommandPromptMissingArgs(args []string, promptUser func(string) (string, error)) (string, error) {
 
 	return "", nil
 }

@@ -4,23 +4,23 @@ import (
 	"os"
 	"strings"
 
-	"gopkg.in/yaml.v3"
 	"github.com/gdamore/tcell/v2"
+	"gopkg.in/yaml.v3"
 )
 
 type Action struct {
-	Type string `yaml:"type"`
+	Type      string `yaml:"type"`
 	Condition string `yaml:"condition"`
-	Action string `yaml:"action"`
+	Action    string `yaml:"action"`
 }
 
 type KeyMapping struct {
 	Action string `yaml:"action"`
-	Key string `yaml:"key"`
+	Key    string `yaml:"key"`
 }
 
 type Config struct {
-	Actions []Action `yaml:"actions"`
+	Actions     []Action     `yaml:"actions"`
 	KeyMappings []KeyMapping `yaml:"key_mappings"`
 }
 

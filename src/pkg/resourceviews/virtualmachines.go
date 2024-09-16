@@ -13,17 +13,17 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 )
 
-var virtualMachineSelectItemFuncMap = map[string]func(*VirtualMachineListView,string) tview.Primitive {
+var virtualMachineSelectItemFuncMap = map[string]func(*VirtualMachineListView, string) tview.Primitive{
 	"SpawnVirtualMachineDetailView": (*VirtualMachineListView).SpawnVirtualMachineDetailView,
 }
 
 type VirtualMachineListView struct {
-	List *tview.List
-	StatusBarText string
-	ActionBarText string
+	List           *tview.List
+	StatusBarText  string
+	ActionBarText  string
 	SubscriptionID string
-	ResourceGroup string
-	Parent *layout.AppLayout
+	ResourceGroup  string
+	Parent         *layout.AppLayout
 }
 
 func NewVirtualMachineListView(layout *layout.AppLayout, subscriptionID string, resourceGroup string) *VirtualMachineListView {
