@@ -12,11 +12,11 @@ import (
 )
 
 type AKSListView struct {
-	List *tview.List
-	StatusBarText string
-	ActionBarText string
+	List           *tview.List
+	StatusBarText  string
+	ActionBarText  string
 	SubscriptionID string
-	ResourceGroup string
+	ResourceGroup  string
 }
 
 func NewAKSListView(subscriptionID string, resourceGroup string) *AKSListView {

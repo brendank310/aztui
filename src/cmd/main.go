@@ -43,11 +43,10 @@ func NewAzTuiState() *AzTuiState {
 	return &a
 }
 
-
 func main() {
 	a := NewAzTuiState()
 
 	if err := a.AppLayout.App.SetRoot(a.AppLayout.Grid, true).Run(); err != nil {
-			panic(err)
+		panic(err)
 	}
 }

@@ -1,8 +1,8 @@
 package consoles
 
 import (
-	"log"
 	"github.com/brendank310/azconsoles/pkg/azconsoles"
+	"log"
 
 	"github.com/gobwas/ws/wsutil"
 	"github.com/rivo/tview"

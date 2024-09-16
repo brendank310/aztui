@@ -7,7 +7,7 @@ import (
 
 func GetSymbolName() string {
 	// Get the program counter (pc) and other details from the runtime
-	pc, _, _, _ := runtime.Caller(1)  // 1 means the caller of this function
+	pc, _, _, _ := runtime.Caller(1) // 1 means the caller of this function
 	// Get the function details using the program counter
 	fn := runtime.FuncForPC(pc)
 	// Return the name of the function
