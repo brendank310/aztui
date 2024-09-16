@@ -57,10 +57,7 @@ func (r *ResourceGroupListView) SpawnVirtualMachineListView(resourceGroup string
 
 	vmList.Update(func() {
 		vmName, _ := vmList.List.GetItemText(vmList.List.GetCurrentItem())
-		spawnedWidget := vmList.SelectItem(vmName)
-		if spawnedWidget != nil {
-			r.Parent.AppendPrimitiveView(spawnedWidget)
-		}
+		vmList.SelectItem(vmName)
 	})
 
 	return vmList.List
