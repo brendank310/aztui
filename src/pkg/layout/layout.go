@@ -27,7 +27,7 @@ func NewAppLayout() *AppLayout {
 			SetBorders(true),
 		Layout: tview.NewFlex(),
 		titleBar: tview.NewTextView().SetLabel("aztui"),
-		actionBar: tview.NewTextView().SetLabel("F12 to exit"),
+		actionBar: tview.NewTextView().SetLabel("Ctrl-C to exit"),
 		statusBar: tview.NewTextView().SetLabel(status),
 	}
 
@@ -40,9 +40,13 @@ func NewAppLayout() *AppLayout {
 	return &a
 }
 
+func (a *AppLayout) AppendPrimitiveView(p tview.Primitive) {
+	a.Layout.AddItem(p, 0, 2, true)
+	a.App.SetFocus(p)
+}
+
 func (a *AppLayout) AppendListView(l *tview.List) {
 	a.Layout.AddItem(l, 0, 2, true)
-	a.App.SetFocus(l)
 }
 
 func (a *AppLayout) RemoveListView(l *tview.List) {
@@ -52,7 +56,6 @@ func (a *AppLayout) RemoveListView(l *tview.List) {
 
 func (a *AppLayout) AppendTextView(t *tview.TextView) {
 	a.Layout.AddItem(t, 80, 0, true)
-	a.App.SetFocus(t)
 }
 
 func (a *AppLayout) RemoveTextView(t *tview.TextView) {

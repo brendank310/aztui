@@ -5,11 +5,17 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/brendank310/aztui/pkg/config"
+	"github.com/brendank310/aztui/pkg/layout"
 	"github.com/rivo/tview"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 )
+
+var virtualMachineSelectItemFuncMap = map[string]func(*VirtualMachineListView,string) tview.Primitive {
+	"SpawnVirtualMachineDetailView": (*VirtualMachineListView).SpawnVirtualMachineDetailView,
+}
 
 type VirtualMachineListView struct {
 	List *tview.List
@@ -17,9 +23,10 @@ type VirtualMachineListView struct {
 	ActionBarText string
 	SubscriptionID string
 	ResourceGroup string
+	Parent *layout.AppLayout
 }
 
-func NewVirtualMachineListView(subscriptionID string, resourceGroup string) *VirtualMachineListView {
+func NewVirtualMachineListView(layout *layout.AppLayout, subscriptionID string, resourceGroup string) *VirtualMachineListView {
 	vm := VirtualMachineListView{
 		List: tview.NewList(),
 	}
@@ -32,8 +39,37 @@ func NewVirtualMachineListView(subscriptionID string, resourceGroup string) *Vir
 	vm.ActionBarText = "## Subscription List(F1) ## | ## Resource Group List(F2) ## | ## Run Command(F5) ## | ## Serial Console (F7) ## | ## Exit(F12) ##"
 	vm.SubscriptionID = subscriptionID
 	vm.ResourceGroup = resourceGroup
+	vm.Parent = layout
 
 	return &vm
+}
+
+func callVirtualMachineMethodByName(view *VirtualMachineListView, methodName string, vmName string) tview.Primitive {
+	if method, exists := virtualMachineSelectItemFuncMap[methodName]; exists {
+		return method(view, vmName)
+	} else {
+		fmt.Printf("Method %s not found\n", methodName)
+	}
+
+	return nil
+}
+
+func (v *VirtualMachineListView) SelectItem(vmName string) tview.Primitive {
+	symbolName := GetSymbolName()
+	typeName := ExtractTypeName(symbolName)
+	fnName := GetFunctionName(symbolName)
+
+	for _, action := range config.GConfig.Actions {
+		if typeName == action.Type && fnName == action.Condition {
+			return callVirtualMachineMethodByName(v, action.Action, vmName)
+		}
+	}
+
+	return nil
+}
+
+func (v *VirtualMachineListView) SpawnVirtualMachineDetailView(vmName string) tview.Primitive {
+	return nil
 }
 
 func (v *VirtualMachineListView) Update(selectedFunc func()) error {

@@ -5,19 +5,37 @@ import (
 	"fmt"
 
 	"github.com/rivo/tview"
+	"github.com/brendank310/aztui/pkg/config"
+	"github.com/brendank310/aztui/pkg/layout"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 )
+
+var resourceGroupSelectItemFuncMap = map[string]func(*ResourceGroupListView,string) tview.Primitive {
+	"SpawnVirtualMachineListView": (*ResourceGroupListView).SpawnVirtualMachineListView,
+}
+
+func callResourceGroupMethodByName(view *ResourceGroupListView, methodName string, resourceGroup string) tview.Primitive {
+	// Check if the method exists in the map and call it with the receiver
+	if method, exists := resourceGroupSelectItemFuncMap[methodName]; exists {
+		return method(view, resourceGroup)  // Call the method with the receiver
+	} else {
+		fmt.Printf("Method %s not found\n", methodName)
+	}
+
+	return nil
+}
 
 type ResourceGroupListView struct {
 	List *tview.List
 	StatusBarText string
 	ActionBarText string
 	SubscriptionID string
+	Parent *layout.AppLayout
 }
 
-func NewResourceGroupListView(subscriptionID string) *ResourceGroupListView {
+func NewResourceGroupListView(layout *layout.AppLayout, subscriptionID string) *ResourceGroupListView {
 	rg := ResourceGroupListView{
 		List: tview.NewList(),
 	}
@@ -29,8 +47,36 @@ func NewResourceGroupListView(subscriptionID string) *ResourceGroupListView {
 	rg.List.ShowSecondaryText(false)
 	rg.ActionBarText = "## Select(Enter) ## | ## Exit(F12) ##"
 	rg.SubscriptionID = subscriptionID
+	rg.Parent = layout
 
 	return &rg
+}
+
+func (r *ResourceGroupListView) SpawnVirtualMachineListView(resourceGroup string) tview.Primitive {
+	vmList := NewVirtualMachineListView(r.Parent, r.SubscriptionID, resourceGroup)
+
+	vmList.Update(func() {
+		vmName, _ := vmList.List.GetItemText(vmList.List.GetCurrentItem())
+		spawnedWidget := vmList.SelectItem(vmName)
+		if spawnedWidget != nil {
+			r.Parent.AppendPrimitiveView(spawnedWidget)
+		}
+	})
+	return nil
+}
+
+func (r *ResourceGroupListView) SelectItem(resourceGroup string) tview.Primitive {
+	symbolName := GetSymbolName()
+	typeName := ExtractTypeName(symbolName)
+	fnName := GetFunctionName(symbolName)
+
+	for _, action := range config.GConfig.Actions {
+		if typeName == action.Type && fnName == action.Condition {
+			return callResourceGroupMethodByName(r, action.Action, resourceGroup)
+		}
+	}
+
+	return nil
 }
 
 func (r *ResourceGroupListView) Update(selectedFunc func()) error {

@@ -87,11 +87,9 @@ func RunAzCommand(args []string, handleErrorFunc func([]string, error) error) (s
 	azcli.Stderr = &stderrBuf
 
 	// Run the command
-	fmt.Println(args)
 	err := azcli.Run()
 
 	if err != nil {
-		fmt.Println(stderrBuf.String())
 		if handleErrorFunc != nil {
 			handleErrorFunc(args, fmt.Errorf("%v", stderrBuf.String()))
 		}
