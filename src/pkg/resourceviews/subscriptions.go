@@ -4,20 +4,20 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/rivo/tview"
 	"github.com/brendank310/aztui/pkg/config"
 	"github.com/brendank310/aztui/pkg/layout"
+	"github.com/rivo/tview"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
 )
 
-var subscriptionSelectItemFuncMap = map[string]func(*SubscriptionListView,string) tview.Primitive {
+var subscriptionSelectItemFuncMap = map[string]func(*SubscriptionListView, string) tview.Primitive{
 	"SpawnResourceGroupListView": (*SubscriptionListView).SpawnResourceGroupListView,
 }
 
 type SubscriptionListView struct {
-	List *tview.List
+	List          *tview.List
 	StatusBarText string
 	ActionBarText string
 	//ResourceGroupLists []ResourceGroupListView
@@ -64,7 +64,7 @@ func (s *SubscriptionListView) SpawnResourceGroupListView(subscriptionID string)
 func callSubscriptionMethodByName(view *SubscriptionListView, methodName string, subscriptionID string) tview.Primitive {
 	// Check if the method exists in the map and call it with the receiver
 	if method, exists := subscriptionSelectItemFuncMap[methodName]; exists {
-		return method(view, subscriptionID)  // Call the method with the receiver
+		return method(view, subscriptionID) // Call the method with the receiver
 	} else {
 		fmt.Printf("Method %s not found\n", methodName)
 	}

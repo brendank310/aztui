@@ -1,9 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"log"
 	"os"
-	"bufio"
 	"strings"
 
 	"github.com/brendank310/aztui/pkg/azcli"
@@ -16,12 +16,12 @@ func main() {
 	//vmName := "testvm"
 	args := []string{"vm",
 		subcommand,
-	 	"--subscription",
-	 	strings.TrimSpace(subscriptionID),
+		"--subscription",
+		strings.TrimSpace(subscriptionID),
 		"--resource-group",
 		resourceGroup,
-	 	//"--name",
-	 	//strings.TrimSpace(vmName),
+		//"--name",
+		//strings.TrimSpace(vmName),
 	}
 	rc, err := azcli.GetResourceCommands(args[0])
 	if err != nil {

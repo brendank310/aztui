@@ -10,11 +10,11 @@ import (
 )
 
 type VMCommandListView struct {
-	List *tview.List
+	List          *tview.List
 	StatusBarText string
 	ActionBarText string
 	ResourceGroup string
-	VM string
+	VM            string
 }
 
 func NewVMCommandListView(resourceGroupName string, VM string) *VMCommandListView {
@@ -50,7 +50,7 @@ func (s *VMCommandListView) Update(selectedFunc func()) error {
 					cmdForm := tview.NewForm()
 
 					missingArg := strings.Split(err.Error(), "field:")[1]
-					cmdForm.AddInputField("Missing argument: " + missingArg, "", 0, nil, func(text string) {
+					cmdForm.AddInputField("Missing argument: "+missingArg, "", 0, nil, func(text string) {
 						newArgs = append(newArgs, missingArg)
 						newArgs = append(newArgs, text)
 						_, _ = azcli.RunAzCommand(newArgs, nil)
@@ -64,7 +64,7 @@ func (s *VMCommandListView) Update(selectedFunc func()) error {
 					missingArgs := strings.Split(strings.TrimSuffix(strings.Replace(strings.Replace(extractRequiredArgs, "(", "", 1), ")", "", 1), " are required\n"), "|")
 
 					for _, arg := range missingArgs {
-						cmdForm.AddInputField("Missing argument: " + arg, "", 0, nil, func(text string) {
+						cmdForm.AddInputField("Missing argument: "+arg, "", 0, nil, func(text string) {
 							newArgs = append(newArgs, arg)
 							newArgs = append(newArgs, text)
 						})
