@@ -5,7 +5,7 @@ actions:
     takeFocus: true
   - type: "ResourceGroupListView"
     condition: "SelectItem"
-    action: "SpawnVirtualMachineListView"
+    action: "SpawnAKSListView"
     takeFocus: true
   - type: "VirtualMachineListView"
     condition: "SelectItem"
@@ -19,6 +19,10 @@ actions:
     condition: "Interact"
     action: "SpawnSerialConsoleView"
     takeFocus: true
+  - type: "AKSListView"
+    condition: "SelectItem"
+    action: "SpawnAKSDetailView"
+    takeFocus: false
   - type: "Global"
     condition: "Quit"
     action: "Quit"
