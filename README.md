@@ -14,7 +14,7 @@
 
 ## Instructions
 
-Install the azcli and login using `az cli`. Once logged in you can build and run aztui with:
+Install the azcli and login using `az login`. Once logged in you can build and run aztui with:
 `make all && bin\aztui`
 
 ## Demo
