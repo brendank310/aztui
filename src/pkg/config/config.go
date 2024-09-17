@@ -12,6 +12,7 @@ type Action struct {
 	Type      string `yaml:"type"`
 	Condition string `yaml:"condition"`
 	Action    string `yaml:"action"`
+	TakeFocus bool `yaml:"takeFocus"`
 }
 
 type KeyMapping struct {

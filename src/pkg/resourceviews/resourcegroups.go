@@ -54,11 +54,7 @@ func NewResourceGroupListView(layout *layout.AppLayout, subscriptionID string) *
 
 func (r *ResourceGroupListView) SpawnVirtualMachineListView(resourceGroup string) tview.Primitive {
 	vmList := NewVirtualMachineListView(r.Parent, r.SubscriptionID, resourceGroup)
-
-	vmList.Update(func() {
-		vmName, _ := vmList.List.GetItemText(vmList.List.GetCurrentItem())
-		vmList.SelectItem(vmName)
-	})
+	vmList.Update()
 
 	return vmList.List
 }
@@ -71,12 +67,12 @@ func (r *ResourceGroupListView) SelectItem(resourceGroup string) {
 	for _, action := range config.GConfig.Actions {
 		if typeName == action.Type && fnName == action.Condition {
 			p := callResourceGroupMethodByName(r, action.Action, resourceGroup)
-			r.Parent.AppendPrimitiveView(p)
+			r.Parent.AppendPrimitiveView(p, action.TakeFocus, 1)
 		}
 	}
 }
 
-func (r *ResourceGroupListView) Update(selectedFunc func()) error {
+func (r *ResourceGroupListView) Update() error {
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		return fmt.Errorf("failed to obtain a credential: %v", err)
@@ -96,8 +92,10 @@ func (r *ResourceGroupListView) Update(selectedFunc func()) error {
 			return fmt.Errorf("failed to get next resource groups page: %v", err)
 		}
 		for _, rg := range page.Value {
-			name := *rg.Name
-			r.List.AddItem(name, "", 0, selectedFunc)
+			resourceGroup := *rg.Name
+			r.List.AddItem(resourceGroup, "", 0, func() {
+				r.SelectItem(resourceGroup)
+			})
 		}
 	}
 

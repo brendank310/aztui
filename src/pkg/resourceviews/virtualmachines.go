@@ -65,13 +65,13 @@ func (v *VirtualMachineListView) SelectItem(vmName string) {
 	for _, action := range config.GConfig.Actions {
 		if typeName == action.Type && fnName == action.Condition {
 			p := callVirtualMachineMethodByName(v, action.Action, vmName)
-			v.Parent.AppendPrimitiveView(p)
+			v.Parent.AppendPrimitiveView(p, action.TakeFocus, 3)
 		}
 	}
 }
 
 func (v *VirtualMachineListView) SpawnVirtualMachineDetailView(vmName string) tview.Primitive {
-	t := tview.NewTextView()
+	t := tview.NewForm()
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		log.Fatalf("Failed to obtain a credential: %v", err)
@@ -91,12 +91,12 @@ func (v *VirtualMachineListView) SpawnVirtualMachineDetailView(vmName string) tv
 		log.Fatalf("Failed to get VM: %v", err)
 	}
 
-	t.SetLabel(vmName + " Details")
-	text := fmt.Sprintf("Name:\t%v\nResource ID:\t%v\nLocation:\t%v\n",
-		*vm.Name,
-		*vm.ID,
-		*vm.Location)
-	t.SetText(text)
+	t.SetTitle(vmName + " Details")
+	t.AddInputField("VM Name", *vm.Name, 0, nil, nil).
+		AddInputField("Resource ID", *vm.ID, 0, nil, nil).
+		AddInputField("Location", *vm.Location, 0, nil, nil).
+		AddInputField("OS", string(*vm.Properties.StorageProfile.OSDisk.OSType), 0, nil, nil)
+	t.SetBorder(true)
 
 	return t
 }
@@ -150,6 +150,7 @@ func (v *VirtualMachineListView) SpawnVirtualMachineCommandListView(vmName strin
 			}
 
 			output := tview.NewTextView()
+			v.Parent.AppendPrimitiveView(output, false, 3)
 			output.SetTitle("Command Output")
 			output.SetBorder(true)
 			output.Write([]byte(out))
@@ -159,7 +160,7 @@ func (v *VirtualMachineListView) SpawnVirtualMachineCommandListView(vmName strin
 	return cmdList
 }
 
-func (v *VirtualMachineListView) Update(selectedFunc func()) error {
+func (v *VirtualMachineListView) Update() error {
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		return fmt.Errorf("failed to obtain a credential: %v", err)
@@ -184,7 +185,10 @@ func (v *VirtualMachineListView) Update(selectedFunc func()) error {
 		}
 
 		for _, vm := range page.Value {
-			v.List.AddItem(*vm.Name, "", 0, selectedFunc)
+			vmName := *vm.Name
+			v.List.AddItem(*vm.Name, "", 0, func() {
+				v.SelectItem(vmName)
+			})
 		}
 	}
 

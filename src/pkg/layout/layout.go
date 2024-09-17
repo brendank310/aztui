@@ -40,9 +40,11 @@ func NewAppLayout() *AppLayout {
 	return &a
 }
 
-func (a *AppLayout) AppendPrimitiveView(p tview.Primitive) {
-	a.Layout.AddItem(p, 0, 2, true)
-	a.App.SetFocus(p)
+func (a *AppLayout) AppendPrimitiveView(p tview.Primitive, takeFocus bool, width int) {
+	a.Layout.AddItem(p, 0, width, takeFocus)
+	if takeFocus {
+		a.App.SetFocus(p)
+	}
 }
 
 func (a *AppLayout) AppendListView(l *tview.List) {

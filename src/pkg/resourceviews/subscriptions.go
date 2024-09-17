@@ -20,7 +20,6 @@ type SubscriptionListView struct {
 	List          *tview.List
 	StatusBarText string
 	ActionBarText string
-	//ResourceGroupLists []ResourceGroupListView
 	Parent *layout.AppLayout
 }
 
@@ -36,27 +35,15 @@ func NewSubscriptionListView(layout *layout.AppLayout) *SubscriptionListView {
 	s.ActionBarText = "## Select(Enter) ## | ## Exit(F12) ##"
 	s.Parent = layout
 
+	s.Update()
+	layout.AppendPrimitiveView(s.List, true, 1)
 	return &s
 }
 
 func (s *SubscriptionListView) SpawnResourceGroupListView(subscriptionID string) tview.Primitive {
 	rgList := NewResourceGroupListView(s.Parent, subscriptionID)
-	rgList.Update(func() {
-		resourceGroup, _ := rgList.List.GetItemText(rgList.List.GetCurrentItem())
-		rgList.SelectItem(resourceGroup)
-	})
+	rgList.Update()
 
-	//s.ResourceGroupLists = append(s.ResourceGroupLists, *rgList)
-
-	//func() {
-	//
-	// 	vmList := NewVirtualMachineListView(subscriptionID, resourceGroupName)
-	// 	a.AppLayout.AppendListView(vmList.List)
-	// 	vmList.Update(func() {
-
-	// 		a.AppLayout.AppendListView(cmdList)
-	// 	})
-	// })
 	return rgList.List
 }
 
@@ -80,12 +67,12 @@ func (s *SubscriptionListView) SelectItem(subscriptionID string) {
 	for _, action := range config.GConfig.Actions {
 		if typeName == action.Type && fnName == action.Condition {
 			p := callSubscriptionMethodByName(s, action.Action, subscriptionID)
-			s.Parent.AppendPrimitiveView(p)
+			s.Parent.AppendPrimitiveView(p, action.TakeFocus, 1)
 		}
 	}
 }
 
-func (s *SubscriptionListView) Update(selectedFunc func()) error {
+func (s *SubscriptionListView) Update() error {
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		return fmt.Errorf("failed to obtain a credential: %v", err)
@@ -105,9 +92,11 @@ func (s *SubscriptionListView) Update(selectedFunc func()) error {
 			return fmt.Errorf("failed to get next subscriptions page: %v", err)
 		}
 		for _, subscription := range page.Value {
-			subID := *subscription.SubscriptionID
-			subName := *subscription.DisplayName
-			s.List.AddItem(subName, subID, 0, selectedFunc)
+			subscriptionID := *subscription.SubscriptionID
+			subscriptionName := *subscription.DisplayName
+			s.List.AddItem(subscriptionName, subscriptionID, 0, func() {
+				s.SelectItem(subscriptionID)
+			})
 		}
 	}
 

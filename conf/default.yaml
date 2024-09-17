@@ -2,9 +2,11 @@ actions:
   - type: "SubscriptionListView"
     condition: "SelectItem"
     action: "SpawnResourceGroupListView"
+    takeFocus: true
   - type: "ResourceGroupListView"
     condition: "SelectItem"
     action: "SpawnVirtualMachineListView"
+    takeFocus: true
   - type: "VirtualMachineListView"
     condition: "SelectItem"
     action: "SpawnVirtualMachineDetailView"
@@ -20,6 +22,7 @@ actions:
   - type: "Global"
     condition: "Quit"
     action: "Quit"
+    takeFocus: true
 key_mappings:
   - action: "SpawnResourceGroupListView"
     key: "Enter"
