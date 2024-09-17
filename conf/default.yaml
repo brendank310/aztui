@@ -7,25 +7,33 @@ actions:
     condition: "SelectItem"
     action: "SpawnResourceTypeListView"
     takeFocus: true
-  - type: "ResourceTypeListView"
-    condition: "SelectItem"
-    action: "SpawnVirtualMachineListView"
-    takeFocus: true
+  # - type: "ResourceTypeListView"
+  #   condition: "SelectItem"
+  #   action: "SpawnVirtualMachineListView"
+  #   takeFocus: true
   - type: "ResourceTypeListView"
     condition: "SelectItem"
     action: "SpawnAKSClusterListView"
-    takeFocus: false
+    takeFocus: true
   - type: "VirtualMachineListView"
     condition: "SelectItem"
     action: "SpawnVirtualMachineDetailView"
     takeFocus: false
-  - type: "VirtualMachineListview"
+  - type: "VirtualMachineListView"
     condition: "RunCommand"
-    action: "SpawnVMCommandView"
+    action: "SpawnVirtualMachineCommandListView"
     takeFocus: true
   - type: "VirtualMachineListView"
     condition: "Interact"
-    action: "SpawnSerialConsoleView"
+    action: "SpawnVirtualMachineSerialConsoleView"
+    takeFocus: true
+  - type: "AKSClusterListView"
+    condition: "SelectItem"
+    action: "SpawnAKSClusterDetailView"
+    takeFocus: true
+  - type: "AKSClusterListView"
+    condition: "Interact"
+    action: "SpawnAKSClusterConsoleView"
     takeFocus: true
   - type: "Global"
     condition: "Quit"
@@ -40,11 +48,15 @@ key_mappings:
     key: "Enter"
   - action: "SpawnVirtualMachineDetailView"
     key: "Enter"
+  - action: "SpawnVirtualMachineCommandListView"
+    key: "Ctrl-R"
+  - action: "SpawnVirtualMachineSerialConsoleView"
+    key: "F5"
   - action: "SpawnAKSClusterListView"
     key: "Enter"
-  - action: "SpawnVMCommandView"
-    key: "Ctrl-R"
-  - action: "SpawnSerialConsoleView"
+  - action: "SpawnAKSClusterDetailView"
+    key: "Enter"
+  - action: "SpawnAKSClusterConsoleView"
     key: "F5"
   - action: "Quit"
     key: "F12"

@@ -3,7 +3,10 @@ package resourceviews
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"os"
+	"os/exec"
 
 	"github.com/brendank310/aztui/pkg/config"
 	"github.com/brendank310/aztui/pkg/layout"
@@ -14,7 +17,8 @@ import (
 )
 
 var aksClusterSelectItemFuncMap = map[string]func(*AKSClusterListView, string) tview.Primitive{
-	"SpawnAKSClusterDetailView": (*AKSClusterListView).SpawnAKSClusterDetailView,
+	"SpawnAKSClusterDetailView":  (*AKSClusterListView).SpawnAKSClusterDetailView,
+	"SpawnAKSClusterConsoleView": (*AKSClusterListView).SpawnAKSClusterConsoleView,
 }
 
 type AKSClusterListView struct {
@@ -134,6 +138,59 @@ func (v *AKSClusterListView) Update() error {
 				v.SelectItem(*cluster.Name)
 			})
 		}
+	}
+
+	return nil
+}
+
+func (v *AKSClusterListView) SpawnAKSClusterConsoleView(aksClusterName string) tview.Primitive {
+	cred, err := azidentity.NewDefaultAzureCredential(nil)
+	if err != nil {
+		log.Fatalf("Failed to obtain a credential: %v", err)
+	}
+
+	// Create a context
+	ctx := context.Background()
+
+	// Create a client to interact with AKS
+	client, err := armcontainerservice.NewManagedClustersClient(v.SubscriptionID, cred, nil)
+	if err != nil {
+		log.Fatalf("failed to create AKS client: %v", err)
+	}
+
+	// Get the AKS cluster credentials
+	credentials, err := client.ListClusterAdminCredentials(ctx, v.ResourceGroup, aksClusterName, nil)
+	if err != nil {
+		log.Fatalf("failed to get AKS cluster credentials: %v", err)
+	}
+
+	if len(credentials.Kubeconfigs) == 0 {
+		log.Fatalf("no kubeconfig found for AKS cluster")
+	}
+
+	// Write the kubeconfig to a temporary file
+	kubeconfig := credentials.Kubeconfigs[0].Value
+	tmpFile, err := ioutil.TempFile("", "kubeconfig-*.yaml")
+	if err != nil {
+		log.Fatalf("failed to create temporary kubeconfig file: %v", err)
+	}
+	defer tmpFile.Close()
+
+	if _, err := tmpFile.Write(kubeconfig); err != nil {
+		log.Fatalf("failed to write kubeconfig to temporary file: %v", err)
+	}
+
+	// Set the KUBECONFIG environment variable
+	os.Setenv("KUBECONFIG", tmpFile.Name())
+
+	// Start a new shell
+	cmd := exec.Command("sh", "-c", "kubectl get nodes")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+
+	if err := cmd.Run(); err != nil {
+		log.Fatalf("failed to start shell: %v", err)
 	}
 
 	return nil
