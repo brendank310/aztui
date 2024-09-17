@@ -20,6 +20,7 @@ var subscriptionSelectItemFuncMap = map[string]func(*SubscriptionListView, strin
 type SubscriptionInfo struct {
 	SubscriptionName string
 	SubscriptionID string
+	SelectedFunc func()
 }
 
 type SubscriptionListView struct {
@@ -50,7 +51,6 @@ func NewSubscriptionListView(layout *layout.AppLayout) *SubscriptionListView {
 func (s *SubscriptionListView) SpawnResourceGroupListView(subscriptionID string) tview.Primitive {
 	rgList := NewResourceGroupListView(s.Parent, subscriptionID)
 	rgList.Update()
-
 	return rgList.List
 }
 
@@ -104,10 +104,11 @@ func (s *SubscriptionListView) InitList(layout *layout.AppLayout) error {
 		for _, subscription := range page.Value {
 			subscriptionID := *subscription.SubscriptionID
 			subscriptionName := *subscription.DisplayName
-			s.List.AddItem(subscriptionName, subscriptionID, 0, func() {
+			selectedFunc := func() {
 				s.SelectItem(subscriptionID)
-			})
-			*s.SubscriptionList = append(*s.SubscriptionList, SubscriptionInfo{subscriptionName, subscriptionID})
+			}
+			s.List.AddItem(subscriptionName, subscriptionID, 0, selectedFunc)
+			*s.SubscriptionList = append(*s.SubscriptionList, SubscriptionInfo{subscriptionName, subscriptionID, selectedFunc})
 		}
 	}
 
@@ -121,9 +122,7 @@ func (s *SubscriptionListView) UpdateList(layout *layout.AppLayout) error {
 	for _,SubscriptionInfo := range *s.SubscriptionList {
 		lowerCaseSubscriptionName := strings.ToLower(SubscriptionInfo.SubscriptionName)
 		if (strings.Contains(lowerCaseSubscriptionName, filter)) {
-			s.List.AddItem(SubscriptionInfo.SubscriptionName, SubscriptionInfo.SubscriptionID, 0, func() {
-				s.SelectItem(SubscriptionInfo.SubscriptionID)
-			})
+			s.List.AddItem(SubscriptionInfo.SubscriptionName, SubscriptionInfo.SubscriptionID, 0, SubscriptionInfo.SelectedFunc)
 		}
 	}
 	return nil

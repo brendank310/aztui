@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -27,11 +28,19 @@ func NewAppLayout() *AppLayout {
 			SetRows(1, 1, -6, 1, 1).
 			SetBorders(true),
 		Layout:    tview.NewFlex(),
-		InputField: tview.NewInputField().SetLabel("Filter here: "),
+		InputField: tview.NewInputField().SetLabel("(F10) Filter: "),
 		titleBar:  tview.NewTextView().SetLabel("aztui"),
 		actionBar: tview.NewTextView().SetLabel("Ctrl-C to exit"),
 		statusBar: tview.NewTextView().SetLabel(status),
 	}
+
+	a.App.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyF10 {
+			a.App.SetFocus(a.InputField)
+			return nil
+		}
+		return event
+	})
 
 	a.Grid.AddItem(a.titleBar, 0, 0, 1, 4, 0, 100, false).
 		AddItem(a.InputField, 1, 0, 1, 4, 0, 100, true).
