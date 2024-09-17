@@ -3,6 +3,7 @@ package resourceviews
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/brendank310/aztui/pkg/config"
 	"github.com/brendank310/aztui/pkg/layout"
@@ -16,11 +17,17 @@ var subscriptionSelectItemFuncMap = map[string]func(*SubscriptionListView, strin
 	"SpawnResourceGroupListView": (*SubscriptionListView).SpawnResourceGroupListView,
 }
 
+type SubscriptionInfo struct {
+	SubscriptionName string
+	SubscriptionID string
+}
+
 type SubscriptionListView struct {
 	List          *tview.List
 	StatusBarText string
 	ActionBarText string
 	Parent *layout.AppLayout
+	SubscriptionList *[]SubscriptionInfo
 }
 
 func NewSubscriptionListView(layout *layout.AppLayout) *SubscriptionListView {
@@ -35,7 +42,7 @@ func NewSubscriptionListView(layout *layout.AppLayout) *SubscriptionListView {
 	s.ActionBarText = "## Select(Enter) ## | ## Exit(F12) ##"
 	s.Parent = layout
 
-	s.Update()
+	s.InitList(layout)
 	layout.AppendPrimitiveView(s.List, true, 1)
 	return &s
 }
@@ -72,7 +79,7 @@ func (s *SubscriptionListView) SelectItem(subscriptionID string) {
 	}
 }
 
-func (s *SubscriptionListView) Update() error {
+func (s *SubscriptionListView) InitList(layout *layout.AppLayout) error {
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		return fmt.Errorf("failed to obtain a credential: %v", err)
@@ -82,6 +89,9 @@ func (s *SubscriptionListView) Update() error {
 	if err != nil {
 		return fmt.Errorf("failed to create subscriptions client: %v", err)
 	}
+
+	// Initialize the subscription list
+	s.SubscriptionList = &[]SubscriptionInfo{}
 
 	// List subscriptions
 	subPager := subClient.NewListPager(nil)
@@ -97,8 +107,24 @@ func (s *SubscriptionListView) Update() error {
 			s.List.AddItem(subscriptionName, subscriptionID, 0, func() {
 				s.SelectItem(subscriptionID)
 			})
+			*s.SubscriptionList = append(*s.SubscriptionList, SubscriptionInfo{subscriptionName, subscriptionID})
 		}
 	}
 
+	return nil
+}
+
+func (s *SubscriptionListView) UpdateList(layout *layout.AppLayout) error {
+	s.List.Clear()
+	// Make filtering case insensitive
+	filter := strings.ToLower(layout.InputField.GetText())
+	for _,SubscriptionInfo := range *s.SubscriptionList {
+		lowerCaseSubscriptionName := strings.ToLower(SubscriptionInfo.SubscriptionName)
+		if (strings.Contains(lowerCaseSubscriptionName, filter)) {
+			s.List.AddItem(SubscriptionInfo.SubscriptionName, SubscriptionInfo.SubscriptionID, 0, func() {
+				s.SelectItem(SubscriptionInfo.SubscriptionID)
+			})
+		}
+	}
 	return nil
 }

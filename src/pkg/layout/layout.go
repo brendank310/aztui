@@ -11,6 +11,7 @@ type AppLayout struct {
 	App       *tview.Application
 	Grid      *tview.Grid
 	Layout    *tview.Flex
+	InputField *tview.InputField
 	titleBar  *tview.TextView
 	actionBar *tview.TextView
 	statusBar *tview.TextView
@@ -23,18 +24,20 @@ func NewAppLayout() *AppLayout {
 		App: tview.NewApplication(),
 		Grid: tview.NewGrid().
 			SetColumns(-1).
-			SetRows(1, -6, 1, 1).
+			SetRows(1, 1, -6, 1, 1).
 			SetBorders(true),
 		Layout:    tview.NewFlex(),
+		InputField: tview.NewInputField().SetLabel("Filter here: "),
 		titleBar:  tview.NewTextView().SetLabel("aztui"),
 		actionBar: tview.NewTextView().SetLabel("Ctrl-C to exit"),
 		statusBar: tview.NewTextView().SetLabel(status),
 	}
 
 	a.Grid.AddItem(a.titleBar, 0, 0, 1, 4, 0, 100, false).
-		AddItem(a.Layout, 1, 0, 1, 4, 0, 100, true).
-		AddItem(a.statusBar, 2, 0, 1, 4, 0, 100, false).
-		AddItem(a.actionBar, 3, 0, 1, 4, 0, 100, false)
+		AddItem(a.InputField, 1, 0, 1, 4, 0, 100, true).
+		AddItem(a.Layout, 2, 0, 1, 4, 0, 100, false).
+		AddItem(a.statusBar, 3, 0, 1, 4, 0, 100, false).
+		AddItem(a.actionBar, 4, 0, 1, 4, 0, 100, false)
 	a.Layout.SetDirection(tview.FlexColumn)
 
 	return &a
