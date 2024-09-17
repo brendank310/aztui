@@ -5,9 +5,13 @@ actions:
     takeFocus: true
   - type: "ResourceGroupListView"
     condition: "SelectItem"
+    action: "SpawnResourceTypeListView"
+    takeFocus: true
+  - type: "ResourceTypeListView"
+    condition: "SelectItem"
     action: "SpawnVirtualMachineListView"
     takeFocus: true
-  - type: "ResourceGroupListView"
+  - type: "ResourceTypeListView"
     condition: "SelectItem"
     action: "SpawnAKSClusterListView"
     takeFocus: false
@@ -30,9 +34,13 @@ actions:
 key_mappings:
   - action: "SpawnResourceGroupListView"
     key: "Enter"
+  - action: "SpawnResourceTypeListView"
+    key: "Enter"
   - action: "SpawnVirtualMachineListView"
     key: "Enter"
   - action: "SpawnVirtualMachineDetailView"
+    key: "Enter"
+  - action: "SpawnAKSClusterListView"
     key: "Enter"
   - action: "SpawnVMCommandView"
     key: "Ctrl-R"
