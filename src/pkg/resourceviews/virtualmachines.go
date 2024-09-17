@@ -8,6 +8,7 @@ import (
 
 	"github.com/brendank310/aztui/pkg/azcli"
 	"github.com/brendank310/aztui/pkg/config"
+	"github.com/brendank310/aztui/pkg/consoles"
 	"github.com/brendank310/aztui/pkg/layout"
 	"github.com/rivo/tview"
 
@@ -17,6 +18,7 @@ import (
 
 var virtualMachineSelectItemFuncMap = map[string]func(*VirtualMachineListView, string) tview.Primitive{
 	"SpawnVirtualMachineDetailView": (*VirtualMachineListView).SpawnVirtualMachineDetailView,
+	"SpawnVirtualMachineSerialConsoleView": (*VirtualMachineListView).SpawnVirtualMachineSerialConsoleView,
 	"SpawnVirtualMachineCommandListView": (*VirtualMachineListView).SpawnVirtualMachineCommandListView,
 }
 
@@ -98,6 +100,15 @@ func (v *VirtualMachineListView) SpawnVirtualMachineDetailView(vmName string) tv
 		AddInputField("OS", string(*vm.Properties.StorageProfile.OSDisk.OSType), 0, nil, nil)
 	t.SetBorder(true)
 
+	return t
+}
+
+func (v *VirtualMachineListView) SpawnVirtualMachineSerialConsoleView(vmName string) tview.Primitive {
+	t := tview.NewTextView()
+	t.SetTitle(vmName + " Console")
+	t.SetBorder(true)
+
+	consoles.StartSerialConsoleMonitor(v.SubscriptionID, v.ResourceGroup, vmName, t)
 	return t
 }
 

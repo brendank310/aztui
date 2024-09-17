@@ -2,7 +2,6 @@ package consoles
 
 import (
 	"github.com/brendank310/azconsoles/pkg/azconsoles"
-	"log"
 
 	"github.com/gobwas/ws/wsutil"
 	"github.com/rivo/tview"
@@ -12,15 +11,13 @@ func StartSerialConsoleMonitor(subscriptionID string, resourceGroupName string, 
 	monitorSerial := func(subscriptionID string, resourceGroupName string, vmName string) {
 		conn, err := azconsoles.StartSerialConsole(subscriptionID, resourceGroupName, vmName)
 		if err != nil {
-			log.Printf("%v\n", err)
-			return
+			panic(err)
 		}
 
 		for {
 			rxBuf, err := wsutil.ReadServerText(conn)
 			if err != nil {
-				log.Printf("%v\n", err)
-				return
+				panic(err)
 			}
 
 			t.Write([]byte(tview.TranslateANSI(string(rxBuf))))
