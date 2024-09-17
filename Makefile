@@ -80,3 +80,6 @@ prepare_rpm_structure: tarball
 	@echo "%changelog" >> $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "* $(shell date +"%a %b %d %Y") Brendan Kerrigan <bkerrig1@binghamton.edu> - $(VERSION)-$(RELEASE)" >> $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "- Initial package" >> $(SPECDIR)/$(BINARY_NAME).spec
+
+format:
+	gofmt -s -w ./src/
