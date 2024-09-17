@@ -13,6 +13,7 @@ import (
 )
 
 var resourceGroupSelectItemFuncMap = map[string]func(*ResourceGroupListView, string) tview.Primitive{
+	"SpawnAKSClusterListView":     (*ResourceGroupListView).SpawnAKSClusterListView,
 	"SpawnVirtualMachineListView": (*ResourceGroupListView).SpawnVirtualMachineListView,
 }
 
@@ -57,6 +58,13 @@ func (r *ResourceGroupListView) SpawnVirtualMachineListView(resourceGroup string
 	vmList.Update()
 
 	return vmList.List
+}
+
+func (r *ResourceGroupListView) SpawnAKSClusterListView(resourceGroup string) tview.Primitive {
+	aksList := NewAKSClusterListView(r.Parent, r.SubscriptionID, resourceGroup)
+	aksList.Update()
+
+	return aksList.List
 }
 
 func (r *ResourceGroupListView) SelectItem(resourceGroup string) {

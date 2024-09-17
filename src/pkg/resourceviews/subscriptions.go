@@ -23,11 +23,11 @@ type SubscriptionInfo struct {
 }
 
 type SubscriptionListView struct {
-	List          *tview.List
-	StatusBarText string
-	ActionBarText string
-	Parent *layout.AppLayout
-	SubscriptionList *[]SubscriptionInfo
+	List              *tview.List
+	StatusBarText     string
+	ActionBarText     string
+	Parent            *layout.AppLayout
+	SubscriptionList  *[]SubscriptionInfo
 }
 
 func NewSubscriptionListView(layout *layout.AppLayout) *SubscriptionListView {

@@ -26,7 +26,9 @@ clean:
 	rm -rf $(DESTDIR)
 
 run:
-	go run cmd/main.go
+	cd $(SRC_DIR) && \
+	AZTUI_CONFIG_PATH=$(PWD)/conf/default.yaml go run cmd/main.go && \
+	cd ..
 
 all: $(DESTDIR)/$(BINARY_NAME)
 

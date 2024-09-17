@@ -7,6 +7,10 @@ actions:
     condition: "SelectItem"
     action: "SpawnVirtualMachineListView"
     takeFocus: true
+  - type: "ResourceGroupListView"
+    condition: "SelectItem"
+    action: "SpawnAKSClusterListView"
+    takeFocus: false
   - type: "VirtualMachineListView"
     condition: "SelectItem"
     action: "SpawnVirtualMachineDetailView"

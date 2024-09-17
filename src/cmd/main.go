@@ -4,6 +4,7 @@ import (
 	_ "fmt"
 
 	"os"
+	_ "strings"
 
 	_ "github.com/brendank310/aztui/pkg/azcli"
 	"github.com/brendank310/aztui/pkg/config"
