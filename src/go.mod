@@ -8,7 +8,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice v1.0.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.2.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions v1.3.0
-	github.com/brendank310/azconsoles v0.0.2
+	github.com/brendank310/azconsoles v0.0.3
 	github.com/gdamore/tcell/v2 v2.7.1
 	github.com/gobwas/ws v1.4.0
 	github.com/rivo/tview v0.0.0-20240625185742-b0a7293b8130
