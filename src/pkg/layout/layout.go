@@ -8,13 +8,13 @@ import (
 )
 
 type AppLayout struct {
-	App       *tview.Application
-	Grid      *tview.Grid
-	Layout    *tview.Flex
-	InputField *tview.InputField
-	titleBar  *tview.TextView
-	actionBar *tview.TextView
-	statusBar *tview.TextView
+	App       	*tview.Application
+	Grid      	*tview.Grid
+	Layout    	*tview.Flex
+	InputField 	*tview.InputField
+	titleBar  	*tview.TextView
+	actionBar 	*tview.TextView
+	statusBar 	*tview.TextView
 }
 
 func NewAppLayout() *AppLayout {
