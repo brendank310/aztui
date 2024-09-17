@@ -17,9 +17,9 @@ import (
 )
 
 var virtualMachineSelectItemFuncMap = map[string]func(*VirtualMachineListView, string) tview.Primitive{
-	"SpawnVirtualMachineDetailView": (*VirtualMachineListView).SpawnVirtualMachineDetailView,
+	"SpawnVirtualMachineDetailView":        (*VirtualMachineListView).SpawnVirtualMachineDetailView,
 	"SpawnVirtualMachineSerialConsoleView": (*VirtualMachineListView).SpawnVirtualMachineSerialConsoleView,
-	"SpawnVirtualMachineCommandListView": (*VirtualMachineListView).SpawnVirtualMachineCommandListView,
+	"SpawnVirtualMachineCommandListView":   (*VirtualMachineListView).SpawnVirtualMachineCommandListView,
 }
 
 type VirtualMachineListView struct {
@@ -131,7 +131,7 @@ func (v *VirtualMachineListView) SpawnVirtualMachineCommandListView(vmName strin
 					cmdForm := tview.NewForm()
 
 					missingArg := strings.Split(err.Error(), "field:")[1]
-					cmdForm.AddInputField("Missing argument: " + missingArg, "", 0, nil, func(text string) {
+					cmdForm.AddInputField("Missing argument: "+missingArg, "", 0, nil, func(text string) {
 						newArgs = append(newArgs, missingArg)
 						newArgs = append(newArgs, text)
 						_, _ = azcli.RunAzCommand(newArgs, nil)
@@ -145,7 +145,7 @@ func (v *VirtualMachineListView) SpawnVirtualMachineCommandListView(vmName strin
 					missingArgs := strings.Split(strings.TrimSuffix(strings.Replace(strings.Replace(extractRequiredArgs, "(", "", 1), ")", "", 1), " are required\n"), "|")
 
 					for _, arg := range missingArgs {
-						cmdForm.AddInputField("Missing argument: " + arg, "", 0, nil, func(text string) {
+						cmdForm.AddInputField("Missing argument: "+arg, "", 0, nil, func(text string) {
 							newArgs = append(newArgs, arg)
 							newArgs = append(newArgs, text)
 						})
