@@ -41,10 +41,7 @@ func NewSubscriptionListView(layout *layout.AppLayout) *SubscriptionListView {
 
 func (s *SubscriptionListView) SpawnResourceGroupListView(subscriptionID string) tview.Primitive {
 	rgList := NewResourceGroupListView(s.Parent, subscriptionID)
-	rgList.Update(func() {
-		resourceGroup, _ := rgList.List.GetItemText(rgList.List.GetCurrentItem())
-		rgList.SelectItem(resourceGroup)
-	})
+	rgList.Update()
 
 	//s.ResourceGroupLists = append(s.ResourceGroupLists, *rgList)
 
@@ -140,7 +137,12 @@ func (s *SubscriptionListView) SelectItem(subscriptionID string) {
 	}
 }
 
-func (s *SubscriptionListView) Update(selectedFunc func()) error {
+func (s *SubscriptionListView) OnSelect() {
+	_, subscriptionID := s.List.GetItemText(s.List.GetCurrentItem())
+	s.SelectItem(subscriptionID)
+}
+
+func (s *SubscriptionListView) Update() error {
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		return fmt.Errorf("failed to obtain a credential: %v", err)
@@ -162,7 +164,7 @@ func (s *SubscriptionListView) Update(selectedFunc func()) error {
 		for _, subscription := range page.Value {
 			subID := *subscription.SubscriptionID
 			subName := *subscription.DisplayName
-			s.List.AddItem(subName, subID, 0, selectedFunc)
+			s.List.AddItem(subName, subID, 0, s.OnSelect)
 		}
 	}
 

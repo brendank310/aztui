@@ -72,7 +72,15 @@ func (v *VirtualMachineListView) SpawnVirtualMachineDetailView(vmName string) tv
 	return nil
 }
 
-func (v *VirtualMachineListView) Update(selectedFunc func()) error {
+func (v *VirtualMachineListView) OnSelect() {
+	vmName, _ := v.List.GetItemText(v.List.GetCurrentItem())
+	spawnedWidget := v.SelectItem(vmName)
+	if spawnedWidget != nil {
+		v.Parent.AppendPrimitiveView(spawnedWidget)
+	}
+}
+
+func (v *VirtualMachineListView) Update() error {
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		return fmt.Errorf("failed to obtain a credential: %v", err)
@@ -97,7 +105,7 @@ func (v *VirtualMachineListView) Update(selectedFunc func()) error {
 		}
 
 		for _, vm := range page.Value {
-			v.List.AddItem(*vm.Name, "", 0, selectedFunc)
+			v.List.AddItem(*vm.Name, "", 0, v.OnSelect)
 		}
 	}
 

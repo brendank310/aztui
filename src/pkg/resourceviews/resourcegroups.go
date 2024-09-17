@@ -54,14 +54,7 @@ func NewResourceGroupListView(layout *layout.AppLayout, subscriptionID string) *
 
 func (r *ResourceGroupListView) SpawnVirtualMachineListView(resourceGroup string) tview.Primitive {
 	vmList := NewVirtualMachineListView(r.Parent, r.SubscriptionID, resourceGroup)
-
-	vmList.Update(func() {
-		vmName, _ := vmList.List.GetItemText(vmList.List.GetCurrentItem())
-		spawnedWidget := vmList.SelectItem(vmName)
-		if spawnedWidget != nil {
-			r.Parent.AppendPrimitiveView(spawnedWidget)
-		}
-	})
+	vmList.Update()
 
 	return vmList.List
 }
@@ -79,7 +72,12 @@ func (r *ResourceGroupListView) SelectItem(resourceGroup string) {
 	}
 }
 
-func (r *ResourceGroupListView) Update(selectedFunc func()) error {
+func (r *ResourceGroupListView) OnSelect() {
+	resourceGroup, _ := r.List.GetItemText(r.List.GetCurrentItem())
+	r.SelectItem(resourceGroup)
+}
+
+func (r *ResourceGroupListView) Update() error {
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		return fmt.Errorf("failed to obtain a credential: %v", err)
@@ -100,7 +98,7 @@ func (r *ResourceGroupListView) Update(selectedFunc func()) error {
 		}
 		for _, rg := range page.Value {
 			name := *rg.Name
-			r.List.AddItem(name, "", 0, selectedFunc)
+			r.List.AddItem(name, "", 0, r.OnSelect)
 		}
 	}
 
