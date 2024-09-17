@@ -20,7 +20,7 @@ type SubscriptionListView struct {
 	List          *tview.List
 	StatusBarText string
 	ActionBarText string
-	Parent *layout.AppLayout
+	Parent        *layout.AppLayout
 }
 
 func NewSubscriptionListView(layout *layout.AppLayout) *SubscriptionListView {
