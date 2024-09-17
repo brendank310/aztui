@@ -7,13 +7,16 @@ import (
 	"github.com/rivo/tview"
 )
 
-func StartSerialConsoleMonitor(subscriptionID string, resourceGroupName string, vmName string, t *tview.TextView) {
-	monitorSerial := func(subscriptionID string, resourceGroupName string, vmName string) {
-		conn, err := azconsoles.StartSerialConsole(subscriptionID, resourceGroupName, vmName)
-		if err != nil {
-			panic(err)
-		}
+func StartSerialConsoleMonitor(subscriptionID string, resourceGroupName string, vmName string) *tview.TextView {
+	t := tview.NewTextView()
+	t.SetTitle(vmName + " Console")
+	t.SetBorder(true)
+	conn, err := azconsoles.StartSerialConsole(subscriptionID, resourceGroupName, vmName)
+	if err != nil {
+		panic(err)
+	}
 
+	go func() {
 		for {
 			rxBuf, err := wsutil.ReadServerText(conn)
 			if err != nil {
@@ -22,6 +25,7 @@ func StartSerialConsoleMonitor(subscriptionID string, resourceGroupName string, 
 
 			t.Write([]byte(tview.TranslateANSI(string(rxBuf))))
 		}
-	}
-	go monitorSerial(subscriptionID, resourceGroupName, vmName)
+	}()
+
+	return t
 }

@@ -104,11 +104,11 @@ func (v *VirtualMachineListView) SpawnVirtualMachineDetailView(vmName string) tv
 }
 
 func (v *VirtualMachineListView) SpawnVirtualMachineSerialConsoleView(vmName string) tview.Primitive {
-	t := tview.NewTextView()
-	t.SetTitle(vmName + " Console")
-	t.SetBorder(true)
+	t := consoles.StartSerialConsoleMonitor(v.SubscriptionID, v.ResourceGroup, vmName)
+	t.SetChangedFunc(func() {
+		v.Parent.App.Draw()
+	})
 
-	consoles.StartSerialConsoleMonitor(v.SubscriptionID, v.ResourceGroup, vmName, t)
 	return t
 }
 
