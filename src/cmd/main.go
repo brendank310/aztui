@@ -3,8 +3,8 @@ package main
 import (
 	_ "fmt"
 
-	_ "strings"
 	"os"
+	_ "strings"
 
 	_ "github.com/brendank310/aztui/pkg/azcli"
 	"github.com/brendank310/aztui/pkg/config"
@@ -27,9 +27,6 @@ func NewAzTuiState() *AzTuiState {
 	if err != nil {
 		panic(err)
 	}
-	a := AzTuiState{
-		AppLayout: layout.NewAppLayout(),
-	}
 
 	configPath := os.Getenv("AZTUI_CONFIG_PATH")
 	if configPath == "" {
@@ -41,7 +38,10 @@ func NewAzTuiState() *AzTuiState {
 		panic(err)
 	}
 
-	a.Config = c
+	a := AzTuiState{
+		AppLayout: layout.NewAppLayout(),
+		Config:    c,
+	}
 
 	subscriptionList := resourceviews.NewSubscriptionListView(a.AppLayout)
 	if subscriptionList == nil {

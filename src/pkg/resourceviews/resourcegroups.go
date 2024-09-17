@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/brendank310/aztui/pkg/config"
 	"github.com/brendank310/aztui/pkg/layout"
 	"github.com/rivo/tview"
 
@@ -12,19 +11,8 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 )
 
-var resourceGroupSelectItemFuncMap = map[string]func(*ResourceGroupListView, string) tview.Primitive{
+var resourceGroupSelectItemFuncMap = map[string]func(*ResourceGroupListView) tview.Primitive{
 	"SpawnVirtualMachineListView": (*ResourceGroupListView).SpawnVirtualMachineListView,
-}
-
-func callResourceGroupMethodByName(view *ResourceGroupListView, methodName string, resourceGroup string) tview.Primitive {
-	// Check if the method exists in the map and call it with the receiver
-	if method, exists := resourceGroupSelectItemFuncMap[methodName]; exists {
-		return method(view, resourceGroup) // Call the method with the receiver
-	} else {
-		fmt.Printf("Method %s not found\n", methodName)
-	}
-
-	return nil
 }
 
 type ResourceGroupListView struct {
@@ -35,7 +23,7 @@ type ResourceGroupListView struct {
 	Parent         *layout.AppLayout
 }
 
-func NewResourceGroupListView(layout *layout.AppLayout, subscriptionID string) *ResourceGroupListView {
+func NewResourceGroupListView(appLayout *layout.AppLayout, subscriptionID string) *ResourceGroupListView {
 	rg := ResourceGroupListView{
 		List: tview.NewList(),
 	}
@@ -47,29 +35,18 @@ func NewResourceGroupListView(layout *layout.AppLayout, subscriptionID string) *
 	rg.List.ShowSecondaryText(false)
 	rg.ActionBarText = "## Select(Enter) ## | ## Exit(F12) ##"
 	rg.SubscriptionID = subscriptionID
-	rg.Parent = layout
+	rg.Parent = appLayout
+
+	layout.InitKeyBindings[ResourceGroupListView, tview.List](appLayout, &rg, rg.List, resourceGroupSelectItemFuncMap, 1)
 
 	return &rg
 }
 
-func (r *ResourceGroupListView) SpawnVirtualMachineListView(resourceGroup string) tview.Primitive {
+func (r *ResourceGroupListView) SpawnVirtualMachineListView() tview.Primitive {
+	resourceGroup, _ := r.List.GetItemText(r.List.GetCurrentItem())
 	vmList := NewVirtualMachineListView(r.Parent, r.SubscriptionID, resourceGroup)
 	vmList.Update()
-
 	return vmList.List
-}
-
-func (r *ResourceGroupListView) SelectItem(resourceGroup string) {
-	symbolName := GetSymbolName()
-	typeName := ExtractTypeName(symbolName)
-	fnName := GetFunctionName(symbolName)
-
-	for _, action := range config.GConfig.Actions {
-		if typeName == action.Type && fnName == action.Condition {
-			p := callResourceGroupMethodByName(r, action.Action, resourceGroup)
-			r.Parent.AppendPrimitiveView(p, action.TakeFocus, 1)
-		}
-	}
 }
 
 func (r *ResourceGroupListView) Update() error {
@@ -93,9 +70,7 @@ func (r *ResourceGroupListView) Update() error {
 		}
 		for _, rg := range page.Value {
 			resourceGroup := *rg.Name
-			r.List.AddItem(resourceGroup, "", 0, func() {
-				r.SelectItem(resourceGroup)
-			})
+			r.List.AddItem(resourceGroup, "", 0, nil)
 		}
 	}
 

@@ -1,23 +1,45 @@
 package config
 
 import (
+	"fmt"
 	"os"
-	"strings"
 
+	"github.com/brendank310/aztui/pkg/logger"
 	"github.com/gdamore/tcell/v2"
 	"gopkg.in/yaml.v3"
 )
 
 type Action struct {
 	Type      string `yaml:"type"`
-	Condition string `yaml:"condition"`
 	Action    string `yaml:"action"`
-	TakeFocus bool `yaml:"takeFocus"`
+	TakeFocus bool   `yaml:"takeFocus"`
+}
+
+type UserKey struct {
+	Key tcell.Key
+	Ch  rune
+}
+
+func (k *UserKey) UnmarshalYAML(value *yaml.Node) error {
+	var key string
+	if err := value.Decode(&key); err != nil {
+		return err
+	}
+
+	tcellKey, runeValue, err := MapUserKeyToEvent(key)
+	if err != nil {
+		return err
+	}
+
+	k.Key = tcellKey
+	k.Ch = runeValue
+
+	return nil
 }
 
 type KeyMapping struct {
-	Action string `yaml:"action"`
-	Key    string `yaml:"key"`
+	Action string  `yaml:"action"`
+	Key    UserKey `yaml:"key"`
 }
 
 type Config struct {
@@ -39,25 +61,22 @@ func LoadConfig(configFile string) (Config, error) {
 	return config, err
 }
 
-func MapUserKeyToEvent(userKey string) (tcell.Key, tcell.ModMask) {
-	keyParts := strings.Split(userKey, "-")
-	var key tcell.Key
-	var mod tcell.ModMask
-
-	for _, part := range keyParts {
-		switch part {
-		case "Ctrl":
-			mod |= tcell.ModCtrl
-		case "Alt":
-			mod |= tcell.ModAlt
-		case "R":
-			key = tcell.KeyCtrlR
-		case "F5":
-			key = tcell.KeyF5
-		case "C":
-			key = tcell.KeyCtrlC
-		}
+func MapUserKeyToEvent(userKey string) (tcell.Key, rune, error) {
+	NameKeys := make(map[string]tcell.Key)
+	for key, name := range tcell.KeyNames {
+		NameKeys[name] = key
 	}
 
-	return key, mod
+	// check if the key is a named key
+	if key, exists := NameKeys[userKey]; exists {
+		logger.Println("Mapped key", userKey, "to", key, "0")
+		return key, 0, nil
+	}
+
+	if len(userKey) == 1 {
+		logger.Println("Mapped runekey", userKey, "to", tcell.KeyRune)
+		return tcell.KeyRune, rune(userKey[0]), nil
+	}
+
+	return 0, 0, fmt.Errorf("unable to map key %s to a tcell key", userKey)
 }

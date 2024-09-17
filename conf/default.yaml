@@ -1,26 +1,20 @@
 actions:
   - type: "SubscriptionListView"
-    condition: "SelectItem"
     action: "SpawnResourceGroupListView"
     takeFocus: true
   - type: "ResourceGroupListView"
-    condition: "SelectItem"
     action: "SpawnVirtualMachineListView"
     takeFocus: true
   - type: "VirtualMachineListView"
-    condition: "SelectItem"
     action: "SpawnVirtualMachineDetailView"
     takeFocus: false
-  - type: "VirtualMachineListview"
-    condition: "RunCommand"
-    action: "SpawnVMCommandView"
+  - type: "VirtualMachineListView"
+    action: "SpawnVirtualMachineCommandListView"
     takeFocus: true
   - type: "VirtualMachineListView"
-    condition: "Interact"
-    action: "SpawnSerialConsoleView"
+    action: "SpawnVirtualMachineSerialConsoleView"
     takeFocus: true
-  - type: "Global"
-    condition: "Quit"
+  - type: "AppLayout"
     action: "Quit"
     takeFocus: true
 key_mappings:
@@ -30,9 +24,9 @@ key_mappings:
     key: "Enter"
   - action: "SpawnVirtualMachineDetailView"
     key: "Enter"
-  - action: "SpawnVMCommandView"
+  - action: "SpawnVirtualMachineCommandListView"
     key: "Ctrl-R"
-  - action: "SpawnSerialConsoleView"
+  - action: "SpawnVirtualMachineSerialConsoleView"
     key: "F5"
   - action: "Quit"
     key: "F12"

@@ -1,13 +1,24 @@
-package resourceviews
+package utils
 
 import (
+	"fmt"
 	"runtime"
 	"strings"
 )
 
-func GetSymbolName() string {
+func GetTypeString[G any]() string {
+	fullType := fmt.Sprintf("%T", *new(G))
+	lastDotIndex := strings.LastIndex(fullType, ".")
+	if lastDotIndex == -1 {
+		return fullType
+	}
+
+	return fullType[lastDotIndex+1:]
+}
+
+func GetSymbolName(skip int) string {
 	// Get the program counter (pc) and other details from the runtime
-	pc, _, _, _ := runtime.Caller(1) // 1 means the caller of this function
+	pc, _, _, _ := runtime.Caller(skip) // 1 means the caller of this function
 	// Get the function details using the program counter
 	fn := runtime.FuncForPC(pc)
 	// Return the name of the function

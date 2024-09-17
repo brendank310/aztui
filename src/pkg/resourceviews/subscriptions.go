@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/brendank310/aztui/pkg/config"
 	"github.com/brendank310/aztui/pkg/layout"
 	"github.com/rivo/tview"
 
@@ -12,7 +11,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
 )
 
-var subscriptionSelectItemFuncMap = map[string]func(*SubscriptionListView, string) tview.Primitive{
+var subscriptionSelectItemFuncMap = map[string]func(*SubscriptionListView) tview.Primitive{
 	"SpawnResourceGroupListView": (*SubscriptionListView).SpawnResourceGroupListView,
 }
 
@@ -20,10 +19,10 @@ type SubscriptionListView struct {
 	List          *tview.List
 	StatusBarText string
 	ActionBarText string
-	Parent *layout.AppLayout
+	Parent        *layout.AppLayout
 }
 
-func NewSubscriptionListView(layout *layout.AppLayout) *SubscriptionListView {
+func NewSubscriptionListView(appLayout *layout.AppLayout) *SubscriptionListView {
 	s := SubscriptionListView{
 		List: tview.NewList(),
 	}
@@ -33,43 +32,22 @@ func NewSubscriptionListView(layout *layout.AppLayout) *SubscriptionListView {
 	s.List.SetBorder(true)
 	s.List.Box.SetTitle(title)
 	s.ActionBarText = "## Select(Enter) ## | ## Exit(F12) ##"
-	s.Parent = layout
+	s.Parent = appLayout
+
+	layout.InitKeyBindings[SubscriptionListView, tview.List](
+		appLayout, &s, s.List, subscriptionSelectItemFuncMap, 1,
+	)
 
 	s.Update()
-	layout.AppendPrimitiveView(s.List, true, 1)
+	appLayout.AppendPrimitiveView(s.List, true, 1)
 	return &s
 }
 
-func (s *SubscriptionListView) SpawnResourceGroupListView(subscriptionID string) tview.Primitive {
+func (s *SubscriptionListView) SpawnResourceGroupListView() tview.Primitive {
+	_, subscriptionID := s.List.GetItemText(s.List.GetCurrentItem())
 	rgList := NewResourceGroupListView(s.Parent, subscriptionID)
 	rgList.Update()
-
 	return rgList.List
-}
-
-// Function to call a method by name
-func callSubscriptionMethodByName(view *SubscriptionListView, methodName string, subscriptionID string) tview.Primitive {
-	// Check if the method exists in the map and call it with the receiver
-	if method, exists := subscriptionSelectItemFuncMap[methodName]; exists {
-		return method(view, subscriptionID) // Call the method with the receiver
-	} else {
-		fmt.Printf("Method %s not found\n", methodName)
-	}
-
-	return nil
-}
-
-func (s *SubscriptionListView) SelectItem(subscriptionID string) {
-	symbolName := GetSymbolName()
-	typeName := ExtractTypeName(symbolName)
-	fnName := GetFunctionName(symbolName)
-
-	for _, action := range config.GConfig.Actions {
-		if typeName == action.Type && fnName == action.Condition {
-			p := callSubscriptionMethodByName(s, action.Action, subscriptionID)
-			s.Parent.AppendPrimitiveView(p, action.TakeFocus, 1)
-		}
-	}
 }
 
 func (s *SubscriptionListView) Update() error {
@@ -94,9 +72,7 @@ func (s *SubscriptionListView) Update() error {
 		for _, subscription := range page.Value {
 			subscriptionID := *subscription.SubscriptionID
 			subscriptionName := *subscription.DisplayName
-			s.List.AddItem(subscriptionName, subscriptionID, 0, func() {
-				s.SelectItem(subscriptionID)
-			})
+			s.List.AddItem(subscriptionName, subscriptionID, 0, nil)
 		}
 	}
 
