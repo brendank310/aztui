@@ -4,6 +4,7 @@ import (
 	_ "fmt"
 
 	_ "strings"
+	"os"
 
 	_ "github.com/brendank310/aztui/pkg/azcli"
 	"github.com/brendank310/aztui/pkg/config"
@@ -30,7 +31,12 @@ func NewAzTuiState() *AzTuiState {
 		AppLayout: layout.NewAppLayout(),
 	}
 
-	c, err := config.LoadConfig("/etc/aztui.yaml")
+	configPath := os.Getenv("AZTUI_CONFIG_PATH")
+	if configPath == "" {
+		configPath = "~/.config/aztui.yaml"
+	}
+
+	c, err := config.LoadConfig(configPath)
 	if err != nil {
 		panic(err)
 	}
