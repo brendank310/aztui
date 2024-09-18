@@ -43,7 +43,7 @@ func NewSubscriptionListView(layout *layout.AppLayout) *SubscriptionListView {
 	s.ActionBarText = "## Select(Enter) ## | ## Exit(F12) ##"
 	s.Parent = layout
 
-	s.Update(layout)
+	s.Update()
 	layout.AppendPrimitiveView(s.List, true, 1)
 	return &s
 }
@@ -79,7 +79,7 @@ func (s *SubscriptionListView) SelectItem(subscriptionID string) {
 	}
 }
 
-func (s *SubscriptionListView) Update(layout *layout.AppLayout) error {
+func (s *SubscriptionListView) Update() error {
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		return fmt.Errorf("failed to obtain a credential: %v", err)
