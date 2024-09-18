@@ -55,6 +55,10 @@ func NewAppLayout() *AppLayout {
 			if a.Layout.GetItemCount() >= 4 {
 				a.App.SetFocus(a.Layout.GetItem(3))
 			}
+		} else if event.Key() == tcell.KeyF5 {
+			if a.Layout.GetItemCount() >= 5 {
+				a.App.SetFocus(a.Layout.GetItem(4))
+			}
 		}
 		return event
 	})
