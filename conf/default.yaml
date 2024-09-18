@@ -2,6 +2,9 @@ actions:
   - type: "SubscriptionListView"
     action: "SpawnResourceGroupListView"
     takeFocus: true
+  - type: "ResourceTypeListViwe"
+    action: "SpawnResourceTypeListView"
+    takeFocus: true
   - type: "ResourceGroupListView"
     action: "SpawnVirtualMachineListView"
     takeFocus: true
@@ -26,11 +29,13 @@ actions:
 key_mappings:
   - action: "SpawnResourceGroupListView"
     key: "Enter"
+  - action: "SpawnResourceTypeListView"
+    key: "Enter"
   - action: "SpawnVirtualMachineListView"
     key: "Enter"
   - action: "SpawnVirtualMachineDetailView"
     key: "Enter"
-  - action: SpawnAKSClusterListView
+  - action: "SpawnAKSClusterListView"
     key: "a"
   - action: "SpawnAKSClusterDetailView"
     key: "Enter"
