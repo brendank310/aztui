@@ -44,7 +44,7 @@ func NewResourceGroupListView(layout *layout.AppLayout, subscriptionID string) *
 
 	rg.List.SetBorder(true)
 	rg.List.Box.SetTitle(title)
-	rg.List.ShowSecondaryText(false)
+	rg.List.ShowSecondaryText(true)
 	rg.ActionBarText = "## Select(Enter) ## | ## Exit(F12) ##"
 	rg.SubscriptionID = subscriptionID
 	rg.Parent = layout
@@ -93,7 +93,8 @@ func (r *ResourceGroupListView) Update() error {
 		}
 		for _, rg := range page.Value {
 			resourceGroup := *rg.Name
-			r.List.AddItem(resourceGroup, "", 0, func() {
+			location := *rg.Location
+			r.List.AddItem(resourceGroup, location, 0, func() {
 				r.SelectItem(resourceGroup)
 			})
 		}

@@ -19,16 +19,16 @@ var subscriptionSelectItemFuncMap = map[string]func(*SubscriptionListView, strin
 
 type SubscriptionInfo struct {
 	SubscriptionName string
-	SubscriptionID string
-	SelectedFunc func()
+	SubscriptionID   string
+	SelectedFunc     func()
 }
 
 type SubscriptionListView struct {
-	List              *tview.List
-	StatusBarText     string
-	ActionBarText     string
-	Parent            *layout.AppLayout
-	SubscriptionList  *[]SubscriptionInfo
+	List             *tview.List
+	StatusBarText    string
+	ActionBarText    string
+	Parent           *layout.AppLayout
+	SubscriptionList *[]SubscriptionInfo
 }
 
 func NewSubscriptionListView(layout *layout.AppLayout) *SubscriptionListView {
@@ -49,6 +49,10 @@ func NewSubscriptionListView(layout *layout.AppLayout) *SubscriptionListView {
 }
 
 func (s *SubscriptionListView) SpawnResourceGroupListView(subscriptionID string) tview.Primitive {
+	// Remove previous views if exist
+	s.Parent.RemoveNonSubscriptionViews()
+
+	// Spawn new resource group list view
 	rgList := NewResourceGroupListView(s.Parent, subscriptionID)
 	rgList.Update()
 	return rgList.List
@@ -119,9 +123,9 @@ func (s *SubscriptionListView) UpdateList(layout *layout.AppLayout) error {
 	s.List.Clear()
 	// Make filtering case insensitive
 	filter := strings.ToLower(layout.InputField.GetText())
-	for _,SubscriptionInfo := range *s.SubscriptionList {
+	for _, SubscriptionInfo := range *s.SubscriptionList {
 		lowerCaseSubscriptionName := strings.ToLower(SubscriptionInfo.SubscriptionName)
-		if (strings.Contains(lowerCaseSubscriptionName, filter)) {
+		if strings.Contains(lowerCaseSubscriptionName, filter) {
 			s.List.AddItem(SubscriptionInfo.SubscriptionName, SubscriptionInfo.SubscriptionID, 0, SubscriptionInfo.SelectedFunc)
 		}
 	}
