@@ -98,13 +98,14 @@ func (a *AppLayout) RemoveTextView(t *tview.TextView) {
 	a.App.SetFocus(a.Layout)
 }
 
-func (a *AppLayout) RemoveNonSubscriptionViews() {
+// index : index of a first view that should be removed
+func (a *AppLayout) RemoveViews(index int) {
 	itemCount := a.Layout.GetItemCount()
 	logger.Println("Item count: ", itemCount)
 
-	for i := 1; i < itemCount; i++ {
+	for i := index; i < itemCount; i++ {
 		logger.Println("Removing item: ", i)
-		a.Layout.RemoveItem(a.Layout.GetItem(1))
+		a.Layout.RemoveItem(a.Layout.GetItem(index))
 	}
 	a.App.SetFocus(a.Layout.GetItem(0))
 }

@@ -73,6 +73,9 @@ func (v *VirtualMachineListView) SelectItem(vmName string) {
 }
 
 func (v *VirtualMachineListView) SpawnVirtualMachineDetailView(vmName string) tview.Primitive {
+	// Remove previous views if exist strating from the one at index 1
+	v.Parent.RemoveViews(4)
+
 	t := tview.NewForm()
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
