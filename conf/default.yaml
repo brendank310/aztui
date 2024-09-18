@@ -2,46 +2,44 @@ actions:
   - type: "SubscriptionListView"
     action: "SpawnResourceGroupListView"
     takeFocus: true
-  - type: "ResourceTypeListViwe"
+    key: "Enter"
+    width: 1
+  - type: "ResourceTypeListView"
     action: "SpawnResourceTypeListView"
     takeFocus: true
-  - type: "ResourceGroupListView"
-    action: "SpawnVirtualMachineListView"
-    takeFocus: true
+    key: "Enter"
+    width: 1
   - type: "ResourceGroupListView"
     action: "SpawnAKSClusterListView"
     takeFocus: true
+    key: "a"
+    width: 1
+  - type: "ResourceGroupListView"
+    action: "SpawnVirtualMachineListView"
+    takeFocus: true
+    key: "Enter"
+    width: 1
   - type: "VirtualMachineListView"
     action: "SpawnVirtualMachineDetailView"
     takeFocus: false
+    width: 3
   - type: "VirtualMachineListView"
     action: "SpawnVirtualMachineCommandListView"
     takeFocus: true
+    key: "Ctrl-R"
+    width: 1
   - type: "VirtualMachineListView"
     action: "SpawnVirtualMachineSerialConsoleView"
     takeFocus: true
+    key: "F5"
+    width: 3
   - type: "AKSClusterListView"
     action: "SpawnAKSClusterDetailView"
     takeFocus: false
+    key: "Enter"
+    width: 3
   - type: "AppLayout"
     action: "Quit"
     takeFocus: true
-key_mappings:
-  - action: "SpawnResourceGroupListView"
-    key: "Enter"
-  - action: "SpawnResourceTypeListView"
-    key: "Enter"
-  - action: "SpawnVirtualMachineListView"
-    key: "Enter"
-  - action: "SpawnVirtualMachineDetailView"
-    key: "Enter"
-  - action: "SpawnAKSClusterListView"
-    key: "a"
-  - action: "SpawnAKSClusterDetailView"
-    key: "Enter"
-  - action: "SpawnVirtualMachineCommandListView"
-    key: "Ctrl-R"
-  - action: "SpawnVirtualMachineSerialConsoleView"
-    key: "F5"
-  - action: "Quit"
     key: "F12"
+    width: 1

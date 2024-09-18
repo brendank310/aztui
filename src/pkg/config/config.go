@@ -9,56 +9,17 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type Action struct {
-	Type      string `yaml:"type"`
-	Action    string `yaml:"action"`
-	TakeFocus bool   `yaml:"takeFocus"`
-}
-
 type UserKey struct {
 	Key tcell.Key
 	Ch  rune
 }
 
-func (k *UserKey) UnmarshalYAML(value *yaml.Node) error {
-	var key string
-	if err := value.Decode(&key); err != nil {
-		return err
-	}
-
-	tcellKey, runeValue, err := MapUserKeyToEvent(key)
-	if err != nil {
-		return err
-	}
-
-	k.Key = tcellKey
-	k.Ch = runeValue
-
-	return nil
-}
-
-type KeyMapping struct {
-	Action string  `yaml:"action"`
-	Key    UserKey `yaml:"key"`
-}
-
-type Config struct {
-	Actions     []Action     `yaml:"actions"`
-	KeyMappings []KeyMapping `yaml:"key_mappings"`
-}
-
-var GConfig Config
-
-func LoadConfig(configFile string) (Config, error) {
-	file, err := os.ReadFile(configFile)
-	if err != nil {
-		return Config{}, err
-	}
-
-	var config Config
-	err = yaml.Unmarshal(file, &config)
-	GConfig = config
-	return config, err
+type Action struct {
+	Type      string  `yaml:"type"`
+	Action    string  `yaml:"action"`
+	TakeFocus bool    `yaml:"takeFocus"`
+	Width     int     `yaml:"width"`
+	Key       UserKey `yaml:"key"`
 }
 
 func MapUserKeyToEvent(userKey string) (tcell.Key, rune, error) {
@@ -79,4 +40,39 @@ func MapUserKeyToEvent(userKey string) (tcell.Key, rune, error) {
 	}
 
 	return 0, 0, fmt.Errorf("unable to map key %s to a tcell key", userKey)
+}
+
+func (k *UserKey) UnmarshalYAML(value *yaml.Node) error {
+	var key string
+	if err := value.Decode(&key); err != nil {
+		return err
+	}
+
+	tcellKey, runeValue, err := MapUserKeyToEvent(key)
+	if err != nil {
+		return err
+	}
+
+	k.Key = tcellKey
+	k.Ch = runeValue
+
+	return nil
+}
+
+type Config struct {
+	Actions []Action `yaml:"actions"`
+}
+
+var GConfig Config
+
+func LoadConfig(configFile string) (Config, error) {
+	file, err := os.ReadFile(configFile)
+	if err != nil {
+		return Config{}, err
+	}
+
+	var config Config
+	err = yaml.Unmarshal(file, &config)
+	GConfig = config
+	return config, err
 }

@@ -40,7 +40,6 @@ func NewAzTuiState() *AzTuiState {
 
 	a := AzTuiState{
 		AppLayout: layout.NewAppLayout(),
-		Config:    c,
 	}
 
 	subscriptionList := resourceviews.NewSubscriptionListView(a.AppLayout)
@@ -48,6 +47,13 @@ func NewAzTuiState() *AzTuiState {
 		panic("unable to create a subscription list")
 	}
 
+	for _, action := range c.Actions {
+		if action.Action == "SpawnSubscriptionListView" {
+			a.AppLayout.AppendPrimitiveView(subscriptionList.List, true, action.Width)
+		}
+	}
+
+	a.AppLayout.AppendPrimitiveView(subscriptionList.List, true, 1)
 	return &a
 }
 

@@ -7,8 +7,12 @@ import (
 	"strings"
 
 	"github.com/brendank310/aztui/pkg/azcli"
+	"github.com/brendank310/aztui/pkg/config"
 	"github.com/brendank310/aztui/pkg/consoles"
 	"github.com/brendank310/aztui/pkg/layout"
+	"github.com/brendank310/aztui/pkg/utils"
+
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
@@ -28,6 +32,7 @@ type VirtualMachineListView struct {
 	SubscriptionID string
 	ResourceGroup  string
 	Parent         *layout.AppLayout
+	FuncMap        map[string]func(*VirtualMachineListView) tview.Primitive
 }
 
 func NewVirtualMachineListView(appLayout *layout.AppLayout, subscriptionID string, resourceGroup string) *VirtualMachineListView {
@@ -45,10 +50,30 @@ func NewVirtualMachineListView(appLayout *layout.AppLayout, subscriptionID strin
 	vm.ResourceGroup = resourceGroup
 	vm.Parent = appLayout
 
-	layout.InitKeyBindings[VirtualMachineListView, tview.List](
-		appLayout, &vm, vm.List, virtualMachineSelectItemFuncMap, 3,
-	)
+	for _, action := range config.GConfig.Actions {
+		if utils.GetTypeString[VirtualMachineListView]() == action.Type {
+			// set the input capture
+			vm.List.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 
+				Ch := rune(0)
+				if event.Key() == tcell.KeyRune {
+					Ch = event.Rune()
+				}
+				_ = Ch
+
+				if method, exists := vm.FuncMap[action.Action]; exists {
+					view := method(&vm)
+					if view != nil {
+						vm.Parent.AppendPrimitiveView(view, action.TakeFocus, action.Width)
+					}
+					return nil
+				}
+				return event
+			})
+		}
+	}
+
+	vm.Update()
 	return &vm
 }
 

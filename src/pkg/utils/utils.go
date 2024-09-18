@@ -3,6 +3,8 @@ package utils
 import (
 	"fmt"
 	"strings"
+
+	_ "github.com/brendank310/aztui/pkg/logger"
 )
 
 func GetTypeString[G any]() string {

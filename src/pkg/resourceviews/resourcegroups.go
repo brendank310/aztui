@@ -4,18 +4,16 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/brendank310/aztui/pkg/config"
 	"github.com/brendank310/aztui/pkg/layout"
+	"github.com/brendank310/aztui/pkg/utils"
+
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 )
-
-var resourceGroupSelectItemFuncMap = map[string]func(*ResourceGroupListView) tview.Primitive{
-  "SpawnResourceTypeListView": (*ResourceGroupListView).SpawnResourceTypeListView,
-	"SpawnAKSClusterListView":     (*ResourceGroupListView).SpawnAKSClusterListView,
-	"SpawnVirtualMachineListView": (*ResourceGroupListView).SpawnVirtualMachineListView,
-}
 
 type ResourceGroupListView struct {
 	List           *tview.List
@@ -23,6 +21,7 @@ type ResourceGroupListView struct {
 	ActionBarText  string
 	SubscriptionID string
 	Parent         *layout.AppLayout
+	FuncMap        map[string]func(*ResourceGroupListView) tview.Primitive
 }
 
 func NewResourceGroupListView(appLayout *layout.AppLayout, subscriptionID string) *ResourceGroupListView {
@@ -38,8 +37,32 @@ func NewResourceGroupListView(appLayout *layout.AppLayout, subscriptionID string
 	rg.ActionBarText = "## Select(Enter) ## | ## Exit(F12) ##"
 	rg.SubscriptionID = subscriptionID
 	rg.Parent = appLayout
-
-	layout.InitKeyBindings[ResourceGroupListView, tview.List](appLayout, &rg, rg.List, resourceGroupSelectItemFuncMap, 1)
+	rg.FuncMap = make(map[string]func(*ResourceGroupListView) tview.Primitive)
+	rg.FuncMap["SpawnResourceTypeListView"] = (*ResourceGroupListView).SpawnResourceTypeListView
+	rg.FuncMap["SpawnAKSClusterListView"] = (*ResourceGroupListView).SpawnAKSClusterListView
+	rg.FuncMap["SpawnVirtualMachineListView"] = (*ResourceGroupListView).SpawnVirtualMachineListView
+	rg.Update()
+	for _, action := range config.GConfig.Actions {
+		targetType := utils.GetTypeString[ResourceGroupListView]()
+		if action.Type == targetType {
+			t := action.Type
+			a := action.Action
+			k := action.Key.Key
+			rg.List.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+				if t == targetType && k == event.Key() {
+					if method, exists := rg.FuncMap[a]; exists {
+						view := method(&rg)
+						if view != nil {
+							rg.Parent.AppendPrimitiveView(view, action.TakeFocus, action.Width)
+						}
+						return nil
+					}
+					return event
+				}
+				return event
+			})
+		}
+	}
 
 	return &rg
 }
@@ -57,10 +80,11 @@ func (r *ResourceGroupListView) SpawnAKSClusterListView() tview.Primitive {
 	aksList.Update()
 
 	return aksList.List
+}
 
-func (r *ResourceGroupListView) SpawnResourceTypeListView(resourceGroup string) tview.Primitive {
+func (r *ResourceGroupListView) SpawnResourceTypeListView() tview.Primitive {
+	resourceGroup, _ := r.List.GetItemText(r.List.GetCurrentItem())
 	rtList := NewResourceTypeListView(r.Parent, r.SubscriptionID, resourceGroup)
-	rtList.Update()
 
 	return rtList.List
 }

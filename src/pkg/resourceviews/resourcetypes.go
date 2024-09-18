@@ -5,24 +5,11 @@ import (
 
 	"github.com/brendank310/aztui/pkg/config"
 	"github.com/brendank310/aztui/pkg/layout"
+	"github.com/brendank310/aztui/pkg/utils"
+
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
-
-var resourceTypeSelectItemFuncMap = map[string]func(*ResourceTypeListView, string) tview.Primitive{
-	"SpawnAKSClusterListView":     (*ResourceTypeListView).SpawnAKSClusterListView,
-	"SpawnVirtualMachineListView": (*ResourceTypeListView).SpawnVirtualMachineListView,
-}
-
-func callResourceTypeMethodByName(view *ResourceTypeListView, methodName string, resourceType string) tview.Primitive {
-	// Check if the method exists in the map and call it with the receiver
-	if method, exists := resourceTypeSelectItemFuncMap[methodName]; exists {
-		return method(view, resourceType) // Call the method with the receiver
-	} else {
-		fmt.Printf("Method %s not found\n", methodName)
-	}
-
-	return nil
-}
 
 type ResourceTypeListView struct {
 	List           *tview.List
@@ -31,6 +18,7 @@ type ResourceTypeListView struct {
 	SubscriptionID string
 	ResourceGroup  string
 	Parent         *layout.AppLayout
+	FuncMap        map[string]func(*ResourceTypeListView, string) tview.Primitive
 }
 
 func NewResourceTypeListView(layout *layout.AppLayout, subscriptionID, resourceGroup string) *ResourceTypeListView {
@@ -47,6 +35,32 @@ func NewResourceTypeListView(layout *layout.AppLayout, subscriptionID, resourceG
 	rt.SubscriptionID = subscriptionID
 	rt.ResourceGroup = resourceGroup
 	rt.Parent = layout
+	rt.FuncMap = make(map[string]func(*ResourceTypeListView, string) tview.Primitive)
+	rt.FuncMap["SpawnAKSClusterListView"] = (*ResourceTypeListView).SpawnAKSClusterListView
+	rt.FuncMap["SpawnVirtualMachineListView"] = (*ResourceTypeListView).SpawnVirtualMachineListView
+
+	for _, action := range config.GConfig.Actions {
+		if utils.GetTypeString[ResourceTypeListView]() == action.Type {
+			// set the input capture
+			rt.List.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+				Ch := rune(0)
+				if event.Key() == tcell.KeyRune {
+					Ch = event.Rune()
+				}
+				_ = Ch
+
+				if method, exists := rt.FuncMap[action.Action]; exists {
+					view := method(&rt, resourceGroup)
+					if view != nil {
+						rt.Parent.AppendPrimitiveView(view, action.TakeFocus, 1)
+					}
+					return nil
+				}
+
+				return event
+			})
+		}
+	}
 
 	return &rt
 }
@@ -63,29 +77,4 @@ func (r *ResourceTypeListView) SpawnAKSClusterListView(resourceType string) tvie
 	aksList.Update()
 
 	return aksList.List
-}
-
-func (r *ResourceTypeListView) SelectItem(resourceType string) {
-	symbolName := GetSymbolName()
-	typeName := ExtractTypeName(symbolName)
-	fnName := GetFunctionName(symbolName)
-
-	for _, action := range config.GConfig.Actions {
-		if typeName == action.Type && fnName == action.Condition {
-			p := callResourceTypeMethodByName(r, action.Action, resourceType)
-			r.Parent.AppendPrimitiveView(p, action.TakeFocus, 1)
-		}
-	}
-}
-
-func (r *ResourceTypeListView) Update() error {
-	r.List.Clear()
-
-	for _, resourceType := range AvailableResourceTypes {
-		r.List.AddItem(resourceType, "", 0, func() {
-			r.SelectItem(resourceType)
-		})
-	}
-
-	return nil
 }

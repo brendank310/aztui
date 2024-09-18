@@ -4,16 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/brendank310/aztui/pkg/config"
-	"github.com/brendank310/aztui/pkg/logger"
-	"github.com/brendank310/aztui/pkg/utils"
-	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
-
-var appFuncMap = map[string]func(*AppLayout) tview.Primitive{
-	"Quit": (*AppLayout).Quit,
-}
 
 type AppLayout struct {
 	App       *tview.Application
@@ -44,10 +36,6 @@ func NewAppLayout() *AppLayout {
 		AddItem(a.statusBar, 2, 0, 1, 4, 0, 100, false).
 		AddItem(a.actionBar, 3, 0, 1, 4, 0, 100, false)
 	a.Layout.SetDirection(tview.FlexColumn)
-
-	InitKeyBindings[AppLayout, tview.Grid](
-		&a, &a, a.Grid, appFuncMap, 1,
-	)
 
 	return &a
 }
@@ -80,72 +68,4 @@ func (a *AppLayout) RemoveTextView(t *tview.TextView) {
 func (a *AppLayout) Quit() tview.Primitive {
 	a.App.Stop()
 	return nil
-}
-
-type TViewWithSetInputCapture[T any] interface {
-	SetInputCapture(capture func(event *tcell.EventKey) *tcell.EventKey) *tview.Box
-}
-
-/**
- * InitKeyBindings initializes key bindings for a given layout.
- * The key bindings are based on the configuration file.
- */
-func InitKeyBindings[G any, T any](
-	layout *AppLayout,
-	class *G,
-	view TViewWithSetInputCapture[T],
-	funcMap map[string]func(*G) tview.Primitive,
-	width int) {
-	typeName := utils.GetTypeString[G]()
-
-	// find matching actions
-	actions := make([]config.Action, 0)
-	for _, action := range config.GConfig.Actions {
-		logger.Println("Checking action", action)
-		if typeName == action.Type {
-			actions = append(actions, action)
-			logger.Println("Action found", action.Action)
-		}
-	}
-
-	if len(actions) == 0 {
-		logger.Println("No actions found for", typeName)
-	}
-
-	// find matching key_mappings
-	keyActionMap := make(map[config.UserKey]config.Action)
-	for _, keyMapping := range config.GConfig.KeyMappings {
-		for _, action := range actions {
-			if keyMapping.Action == action.Action {
-				keyActionMap[keyMapping.Key] = action
-				logger.Println("Key mapping found", keyMapping.Key, action)
-				continue
-			}
-		}
-	}
-
-	// set the input capture
-	view.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		// check if the key is in the keyActionMap
-		logger.Println("Key pressed", event.Key(), event.Rune())
-		Ch := rune(0)
-		if event.Key() == tcell.KeyRune {
-			Ch = event.Rune()
-		}
-
-		if action, exists := keyActionMap[config.UserKey{Key: event.Key(), Ch: Ch}]; exists {
-			// call the function with the action name
-			if method, exists := funcMap[action.Action]; exists {
-				logger.Println("Calling method", action.Action)
-				view := method(class)
-				if view != nil {
-					layout.AppendPrimitiveView(view, action.TakeFocus, width)
-				}
-				return nil
-			}
-			logger.Println("Method not found", action.Action)
-		}
-
-		return event
-	})
 }

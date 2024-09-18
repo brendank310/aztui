@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/brendank310/aztui/pkg/config"
 	"github.com/brendank310/aztui/pkg/layout"
+	"github.com/brendank310/aztui/pkg/utils"
+
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice"
 )
-
-var aksClusterSelectItemFuncMap = map[string]func(*AKSClusterListView) tview.Primitive{
-	"SpawnAKSClusterDetailView": (*AKSClusterListView).SpawnAKSClusterDetailView,
-}
 
 type AKSClusterListView struct {
 	List           *tview.List
@@ -23,6 +23,7 @@ type AKSClusterListView struct {
 	SubscriptionID string
 	ResourceGroup  string
 	Parent         *layout.AppLayout
+	FuncMap        map[string]func(*AKSClusterListView) tview.Primitive
 }
 
 func NewAKSClusterListView(appLayout *layout.AppLayout, subscriptionID string, resourceGroup string) *AKSClusterListView {
@@ -39,10 +40,29 @@ func NewAKSClusterListView(appLayout *layout.AppLayout, subscriptionID string, r
 	aks.SubscriptionID = subscriptionID
 	aks.ResourceGroup = resourceGroup
 	aks.Parent = appLayout
+	aks.FuncMap["SpawnAKSClusterDetailView"] = (*AKSClusterListView).SpawnAKSClusterDetailView
+	for _, action := range config.GConfig.Actions {
+		if utils.GetTypeString[AKSClusterListView]() == action.Type {
+			// set the input capture
+			aks.List.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 
-	layout.InitKeyBindings[AKSClusterListView, tview.List](
-		appLayout, &aks, aks.List, aksClusterSelectItemFuncMap, 3,
-	)
+				Ch := rune(0)
+				if event.Key() == tcell.KeyRune {
+					Ch = event.Rune()
+				}
+				_ = Ch
+
+				if method, exists := aks.FuncMap[action.Action]; exists {
+					view := method(&aks)
+					if view != nil {
+						aks.Parent.AppendPrimitiveView(view, action.TakeFocus, 3)
+					}
+					return nil
+				}
+				return event
+			})
+		}
+	}
 
 	return &aks
 }

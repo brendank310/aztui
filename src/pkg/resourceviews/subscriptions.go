@@ -4,22 +4,24 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/brendank310/aztui/pkg/config"
 	"github.com/brendank310/aztui/pkg/layout"
+	"github.com/brendank310/aztui/pkg/utils"
+
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
 )
 
-var subscriptionSelectItemFuncMap = map[string]func(*SubscriptionListView) tview.Primitive{
-	"SpawnResourceGroupListView": (*SubscriptionListView).SpawnResourceGroupListView,
-}
-
 type SubscriptionListView struct {
 	List          *tview.List
 	StatusBarText string
 	ActionBarText string
 	Parent        *layout.AppLayout
+	FuncMap       map[string]func(*SubscriptionListView) tview.Primitive
+	InputHandlerList      []func(event *tcell.EventKey) *tcell.EventKey	
 }
 
 func NewSubscriptionListView(appLayout *layout.AppLayout) *SubscriptionListView {
@@ -33,13 +35,45 @@ func NewSubscriptionListView(appLayout *layout.AppLayout) *SubscriptionListView 
 	s.List.Box.SetTitle(title)
 	s.ActionBarText = "## Select(Enter) ## | ## Exit(F12) ##"
 	s.Parent = appLayout
+	s.FuncMap = make(map[string]func(*SubscriptionListView) tview.Primitive)
+	s.FuncMap["SpawnResourceGroupListView"] = (*SubscriptionListView).SpawnResourceGroupListView
 
-	layout.InitKeyBindings[SubscriptionListView, tview.List](
-		appLayout, &s, s.List, subscriptionSelectItemFuncMap, 1,
-	)
-
+	s.InputHandlerList = make([](func(event *tcell.EventKey) *tcell.EventKey), 8)
 	s.Update()
-	appLayout.AppendPrimitiveView(s.List, true, 1)
+
+	for _, action := range config.GConfig.Actions {
+		targetType := utils.GetTypeString[SubscriptionListView]()
+		if action.Type == targetType {
+			t := action.Type
+			a := action.Action
+			k := action.Key.Key
+			s.InputHandlerList = append(s.InputHandlerList, func(event *tcell.EventKey) *tcell.EventKey {
+				if t == targetType && k == event.Key() {
+					if method, exists := s.FuncMap[a]; exists {
+						view := method(&s)
+						if view != nil {
+							s.Parent.AppendPrimitiveView(view, action.TakeFocus, action.Width)
+						}
+						return nil
+					}
+
+					return event
+				}
+				return event
+			})
+		}
+	}
+
+	s.List.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		for _, fn := range s.InputHandlerList {
+		   if fn != nil {
+		   	   return fn(event)
+	}
+		}
+
+		return event
+	})
+
 	return &s
 }
 
