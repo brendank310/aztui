@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/brendank310/aztui/pkg/logger"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -38,6 +39,26 @@ func NewAppLayout() *AppLayout {
 		if event.Key() == tcell.KeyF10 {
 			a.App.SetFocus(a.InputField)
 			return nil
+		} else if event.Key() == tcell.KeyF1 {
+			if a.Layout.GetItemCount() >= 1 {
+				a.App.SetFocus(a.Layout.GetItem(0))
+			}
+		} else if event.Key() == tcell.KeyF2 {
+			if a.Layout.GetItemCount() >= 2 {
+				a.App.SetFocus(a.Layout.GetItem(1))
+			}
+		} else if event.Key() == tcell.KeyF3 {
+			if a.Layout.GetItemCount() >= 3 {
+				a.App.SetFocus(a.Layout.GetItem(2))
+			}
+		} else if event.Key() == tcell.KeyF4 {
+			if a.Layout.GetItemCount() >= 4 {
+				a.App.SetFocus(a.Layout.GetItem(3))
+			}
+		} else if event.Key() == tcell.KeyF5 {
+			if a.Layout.GetItemCount() >= 5 {
+				a.App.SetFocus(a.Layout.GetItem(4))
+			}
 		}
 		return event
 	})
@@ -75,4 +96,15 @@ func (a *AppLayout) AppendTextView(t *tview.TextView) {
 func (a *AppLayout) RemoveTextView(t *tview.TextView) {
 	a.Layout.RemoveItem(t)
 	a.App.SetFocus(a.Layout)
+}
+
+func (a *AppLayout) RemoveNonSubscriptionViews() {
+	itemCount := a.Layout.GetItemCount()
+	logger.Println("Item count: ", itemCount)
+
+	for i := 1; i < itemCount; i++ {
+		logger.Println("Removing item: ", i)
+		a.Layout.RemoveItem(a.Layout.GetItem(1))
+	}
+	a.App.SetFocus(a.Layout.GetItem(0))
 }

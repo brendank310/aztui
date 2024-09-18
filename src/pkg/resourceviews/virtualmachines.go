@@ -40,7 +40,7 @@ func NewVirtualMachineListView(layout *layout.AppLayout, subscriptionID string, 
 
 	vm.List.SetBorder(true)
 	vm.List.Box.SetTitle(title)
-	vm.List.ShowSecondaryText(false)
+	vm.List.ShowSecondaryText(true)
 	vm.ActionBarText = "## Subscription List(F1) ## | ## Resource Group List(F2) ## | ## Run Command(F5) ## | ## Serial Console (F7) ## | ## Exit(F12) ##"
 	vm.SubscriptionID = subscriptionID
 	vm.ResourceGroup = resourceGroup
@@ -197,7 +197,8 @@ func (v *VirtualMachineListView) Update() error {
 
 		for _, vm := range page.Value {
 			vmName := *vm.Name
-			v.List.AddItem(*vm.Name, "", 0, func() {
+			vmLocation := *vm.Location
+			v.List.AddItem(vmName, vmLocation, 0, func() {
 				v.SelectItem(vmName)
 			})
 		}
