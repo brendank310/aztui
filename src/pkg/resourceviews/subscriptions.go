@@ -3,6 +3,7 @@ package resourceviews
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/brendank310/aztui/pkg/config"
 	"github.com/brendank310/aztui/pkg/layout"
@@ -16,11 +17,18 @@ var subscriptionSelectItemFuncMap = map[string]func(*SubscriptionListView, strin
 	"SpawnResourceGroupListView": (*SubscriptionListView).SpawnResourceGroupListView,
 }
 
+type SubscriptionInfo struct {
+	SubscriptionName string
+	SubscriptionID string
+	SelectedFunc func()
+}
+
 type SubscriptionListView struct {
-	List          *tview.List
-	StatusBarText string
-	ActionBarText string
-	Parent        *layout.AppLayout
+	List              *tview.List
+	StatusBarText     string
+	ActionBarText     string
+	Parent            *layout.AppLayout
+	SubscriptionList  *[]SubscriptionInfo
 }
 
 func NewSubscriptionListView(layout *layout.AppLayout) *SubscriptionListView {
@@ -43,7 +51,6 @@ func NewSubscriptionListView(layout *layout.AppLayout) *SubscriptionListView {
 func (s *SubscriptionListView) SpawnResourceGroupListView(subscriptionID string) tview.Primitive {
 	rgList := NewResourceGroupListView(s.Parent, subscriptionID)
 	rgList.Update()
-
 	return rgList.List
 }
 
@@ -83,6 +90,9 @@ func (s *SubscriptionListView) Update() error {
 		return fmt.Errorf("failed to create subscriptions client: %v", err)
 	}
 
+	// Initialize the subscription list
+	s.SubscriptionList = &[]SubscriptionInfo{}
+
 	// List subscriptions
 	subPager := subClient.NewListPager(nil)
 	ctx := context.Background()
@@ -94,11 +104,26 @@ func (s *SubscriptionListView) Update() error {
 		for _, subscription := range page.Value {
 			subscriptionID := *subscription.SubscriptionID
 			subscriptionName := *subscription.DisplayName
-			s.List.AddItem(subscriptionName, subscriptionID, 0, func() {
+			selectedFunc := func() {
 				s.SelectItem(subscriptionID)
-			})
+			}
+			s.List.AddItem(subscriptionName, subscriptionID, 0, selectedFunc)
+			*s.SubscriptionList = append(*s.SubscriptionList, SubscriptionInfo{subscriptionName, subscriptionID, selectedFunc})
 		}
 	}
 
+	return nil
+}
+
+func (s *SubscriptionListView) UpdateList(layout *layout.AppLayout) error {
+	s.List.Clear()
+	// Make filtering case insensitive
+	filter := strings.ToLower(layout.InputField.GetText())
+	for _,SubscriptionInfo := range *s.SubscriptionList {
+		lowerCaseSubscriptionName := strings.ToLower(SubscriptionInfo.SubscriptionName)
+		if (strings.Contains(lowerCaseSubscriptionName, filter)) {
+			s.List.AddItem(SubscriptionInfo.SubscriptionName, SubscriptionInfo.SubscriptionID, 0, SubscriptionInfo.SelectedFunc)
+		}
+	}
 	return nil
 }

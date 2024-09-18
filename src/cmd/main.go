@@ -12,6 +12,7 @@ import (
 	"github.com/brendank310/aztui/pkg/logger"
 	"github.com/brendank310/aztui/pkg/resourceviews"
 
+	"github.com/gdamore/tcell/v2"
 	_ "github.com/rivo/tview"
 )
 
@@ -47,6 +48,11 @@ func NewAzTuiState() *AzTuiState {
 	if subscriptionList == nil {
 		panic("unable to create a subscription list")
 	}
+
+	a.AppLayout.InputField.SetFinishedFunc(func(key tcell.Key) {
+		subscriptionList.UpdateList(a.AppLayout)
+		a.App.SetFocus(subscriptionList.List)
+	})
 
 	return &a
 }
