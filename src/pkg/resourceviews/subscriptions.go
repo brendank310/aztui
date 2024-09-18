@@ -49,8 +49,8 @@ func NewSubscriptionListView(layout *layout.AppLayout) *SubscriptionListView {
 }
 
 func (s *SubscriptionListView) SpawnResourceGroupListView(subscriptionID string) tview.Primitive {
-	// Remove previous views if exist
-	s.Parent.RemoveNonSubscriptionViews()
+	// Remove previous views if exist strating from the one at index 1
+	s.Parent.RemoveViews(1)
 
 	// Spawn new resource group list view
 	rgList := NewResourceGroupListView(s.Parent, subscriptionID)

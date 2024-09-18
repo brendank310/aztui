@@ -37,7 +37,7 @@ func NewResourceListView(layout *layout.AppLayout, subscriptionID, resourceGroup
 
 	resourceList.List.SetBorder(true)
 	resourceList.List.Box.SetTitle(title)
-	resourceList.List.ShowSecondaryText(false)
+	resourceList.List.ShowSecondaryText(true)
 	resourceList.ActionBarText = "## Subscription List(F1) ## | ## Resource Group List(F2) ## | ## Resource Type List(F3) ## | ## Exit(F12) ##"
 	resourceList.SubscriptionID = subscriptionID
 	resourceList.ResourceGroup = resourceGroup
@@ -71,6 +71,9 @@ func (v *ResourceListView) SelectItem(resourceName string) {
 }
 
 func (v *ResourceListView) SpawnResourceDetailView(resourceName string) tview.Primitive {
+	// Remove previous views if exist strating from the one at index 4
+	v.Parent.RemoveViews(4)
+
 	t := tview.NewForm()
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
@@ -152,7 +155,7 @@ func (v *ResourceListView) Update() error {
 		}
 
 		for _, resource := range page.Value {
-			v.List.AddItem(*resource.Name, "", 0, func() {
+			v.List.AddItem(*resource.Name, *resource.Location, 0, func() {
 				v.SelectItem(*resource.Name)
 			})
 		}
