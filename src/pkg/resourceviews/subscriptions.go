@@ -4,9 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/brendank310/aztui/pkg/config"
 	"github.com/brendank310/aztui/pkg/layout"
-	"github.com/brendank310/aztui/pkg/utils"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -16,12 +14,12 @@ import (
 )
 
 type SubscriptionListView struct {
-	List          *tview.List
-	StatusBarText string
-	ActionBarText string
-	Parent        *layout.AppLayout
-	FuncMap       map[string]func(*SubscriptionListView) tview.Primitive
-	InputHandlerList      []func(event *tcell.EventKey) *tcell.EventKey	
+	List             *tview.List
+	StatusBarText    string
+	ActionBarText    string
+	Parent           *layout.AppLayout
+	FuncMap          map[string]func(*SubscriptionListView) tview.Primitive
+	InputHandlerList []func(event *tcell.EventKey) *tcell.EventKey
 }
 
 func NewSubscriptionListView(appLayout *layout.AppLayout) *SubscriptionListView {
@@ -37,44 +35,39 @@ func NewSubscriptionListView(appLayout *layout.AppLayout) *SubscriptionListView 
 	s.Parent = appLayout
 	s.FuncMap = make(map[string]func(*SubscriptionListView) tview.Primitive)
 	s.FuncMap["SpawnResourceGroupListView"] = (*SubscriptionListView).SpawnResourceGroupListView
+	s.InputHandlerList = make([](func(event *tcell.EventKey) *tcell.EventKey), 0)
+	InstallInputFunctions[SubscriptionListView](s)
 
-	s.InputHandlerList = make([](func(event *tcell.EventKey) *tcell.EventKey), 8)
 	s.Update()
 
-	for _, action := range config.GConfig.Actions {
-		targetType := utils.GetTypeString[SubscriptionListView]()
-		if action.Type == targetType {
-			t := action.Type
-			a := action.Action
-			k := action.Key.Key
-			s.InputHandlerList = append(s.InputHandlerList, func(event *tcell.EventKey) *tcell.EventKey {
-				if t == targetType && k == event.Key() {
-					if method, exists := s.FuncMap[a]; exists {
-						view := method(&s)
-						if view != nil {
-							s.Parent.AppendPrimitiveView(view, action.TakeFocus, action.Width)
-						}
-						return nil
-					}
+	return &s
+}
 
-					return event
-				}
-				return event
-			})
-		}
+func (s *SubscriptionListView) CallFunctionByName(name string) func(*SubscriptionListView) tview.Primitive {
+	if method, exists := s.FuncMap[name]; exists {
+		return method(s)
 	}
 
+	return nil
+}
+
+func (s *SubscriptionListView) AppendInputHandler(f func(event *tcell.EventKey) *tcell.EventKey) {
+	s.InputHandlerList = append(s.InputHandlerList, f)
+}
+
+func (s *SubscriptionListView) SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey) {
 	s.List.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		for _, fn := range s.InputHandlerList {
-		   if fn != nil {
-		   	   return fn(event)
-	}
+			if fn != nil {
+				return fn(event)
+			}
 		}
-
 		return event
 	})
+}
 
-	return &s
+func (s *SubscriptionListView) AppendPrimitiveView(p tview.Primitive, takeFocus bool, width int) {
+	s.AppendPrimitiveView(view, takeFocus, width)
 }
 
 func (s *SubscriptionListView) SpawnResourceGroupListView() tview.Primitive {
