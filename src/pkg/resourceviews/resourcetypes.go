@@ -1,16 +1,19 @@
 package resourceviews
 
 import (
+	"context"
 	"fmt"
+	"log"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/brendank310/aztui/pkg/config"
 	"github.com/brendank310/aztui/pkg/layout"
 	"github.com/rivo/tview"
 )
 
 var resourceTypeSelectItemFuncMap = map[string]func(*ResourceTypeListView, string) tview.Primitive{
-	"SpawnAKSClusterListView":     (*ResourceTypeListView).SpawnAKSClusterListView,
-	"SpawnVirtualMachineListView": (*ResourceTypeListView).SpawnVirtualMachineListView,
+	"SpawnResourceListView": (*ResourceTypeListView).SpawnResourceListView,
 }
 
 func callResourceTypeMethodByName(view *ResourceTypeListView, methodName string, resourceType string) tview.Primitive {
@@ -51,18 +54,11 @@ func NewResourceTypeListView(layout *layout.AppLayout, subscriptionID, resourceG
 	return &rt
 }
 
-func (r *ResourceTypeListView) SpawnVirtualMachineListView(resourceType string) tview.Primitive {
-	vmList := NewVirtualMachineListView(r.Parent, r.SubscriptionID, r.ResourceGroup)
-	vmList.Update()
+func (r *ResourceTypeListView) SpawnResourceListView(resourceType string) tview.Primitive {
+	resourceList := NewResourceListView(r.Parent, r.SubscriptionID, r.ResourceGroup, resourceType)
+	resourceList.Update()
 
-	return vmList.List
-}
-
-func (r *ResourceTypeListView) SpawnAKSClusterListView(resourceType string) tview.Primitive {
-	aksList := NewAKSClusterListView(r.Parent, r.SubscriptionID, r.ResourceGroup)
-	aksList.Update()
-
-	return aksList.List
+	return resourceList.List
 }
 
 func (r *ResourceTypeListView) SelectItem(resourceType string) {
@@ -79,9 +75,43 @@ func (r *ResourceTypeListView) SelectItem(resourceType string) {
 }
 
 func (r *ResourceTypeListView) Update() error {
+	// Create a credential using the default Azure credential chain
+	cred, err := azidentity.NewDefaultAzureCredential(nil)
+	if err != nil {
+		log.Fatalf("failed to obtain a credential: %v", err)
+	}
+
+	// Create a context
+	ctx := context.Background()
+
+	// Create a client to interact with the resource management APIs
+	resourcesClient, err := armresources.NewClient(r.SubscriptionID, cred, nil)
+	if err != nil {
+		log.Fatalf("failed to create resources client: %v", err)
+	}
+
+	// Create a pager to list resources in the specified resource group
+	pager := resourcesClient.NewListByResourceGroupPager(r.ResourceGroup, nil)
+
 	r.List.Clear()
 
-	for _, resourceType := range AvailableResourceTypes {
+	// Create a map to store unique resource types
+	resourceTypes := make(map[string]struct{})
+	// Iterate through the pages and collect resource types
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			log.Fatalf("failed to get the next page of results: %v", err)
+		}
+
+		for _, resource := range page.Value {
+			if resource.Type != nil {
+				resourceTypes[*resource.Type] = struct{}{}
+			}
+		}
+	}
+
+	for resourceType := range resourceTypes {
 		r.List.AddItem(resourceType, "", 0, func() {
 			r.SelectItem(resourceType)
 		})
