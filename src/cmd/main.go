@@ -54,6 +54,9 @@ func NewAzTuiState() *AzTuiState {
 		a.App.SetFocus(subscriptionList.List)
 	})
 
+	tl := resourceviews.NewTUILogView(a.AppLayout)
+	a.AppLayout.AppendPrimitiveView(subscriptionList.List, true, 1)
+	a.AppLayout.AppendPrimitiveView(tl.View, false, 3)	
 	return &a
 }
 
