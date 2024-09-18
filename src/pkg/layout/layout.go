@@ -86,6 +86,10 @@ type TViewWithSetInputCapture[T any] interface {
 	SetInputCapture(capture func(event *tcell.EventKey) *tcell.EventKey) *tview.Box
 }
 
+/**
+ * InitKeyBindings initializes key bindings for a given layout.
+ * The key bindings are based on the configuration file.
+ */
 func InitKeyBindings[G any, T any](
 	layout *AppLayout,
 	class *G,
