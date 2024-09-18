@@ -38,7 +38,7 @@ func NewResourceGroupListView(appLayout *layout.AppLayout, subscriptionID string
 	rg.SubscriptionID = subscriptionID
 	rg.Parent = appLayout
 
-	layout.InitKeyBindings[ResourceGroupListView, tview.List](appLayout, &rg, rg.List, resourceGroupSelectItemFuncMap, 1)
+	layout.InitKeyBindings[ResourceGroupListView, tview.List](appLayout, &rg, rg.List, resourceGroupSelectItemFuncMap)
 
 	return &rg
 }

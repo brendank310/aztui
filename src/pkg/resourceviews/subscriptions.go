@@ -35,7 +35,7 @@ func NewSubscriptionListView(appLayout *layout.AppLayout) *SubscriptionListView 
 	s.Parent = appLayout
 
 	layout.InitKeyBindings[SubscriptionListView, tview.List](
-		appLayout, &s, s.List, subscriptionSelectItemFuncMap, 1,
+		appLayout, &s, s.List, subscriptionSelectItemFuncMap,
 	)
 
 	s.Update()

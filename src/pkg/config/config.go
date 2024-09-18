@@ -9,12 +9,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type Action struct {
-	Type      string `yaml:"type"`
-	Action    string `yaml:"action"`
-	TakeFocus bool   `yaml:"takeFocus"`
-}
-
 type UserKey struct {
 	Key tcell.Key
 	Ch  rune
@@ -37,14 +31,20 @@ func (k *UserKey) UnmarshalYAML(value *yaml.Node) error {
 	return nil
 }
 
-type KeyMapping struct {
-	Action string  `yaml:"action"`
-	Key    UserKey `yaml:"key"`
+type Action struct {
+	Action    string  `yaml:"action"`
+	TakeFocus bool    `yaml:"takeFocus"`
+	Key       UserKey `yaml:"key"`
+	Width     int     `yaml:"width"`
+}
+
+type View struct {
+	Name    string   `yaml:"view"`
+	Actions []Action `yaml:"actions"`
 }
 
 type Config struct {
-	Actions     []Action     `yaml:"actions"`
-	KeyMappings []KeyMapping `yaml:"key_mappings"`
+	Views []View `yaml:"views"`
 }
 
 var GConfig Config

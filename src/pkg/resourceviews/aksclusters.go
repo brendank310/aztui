@@ -41,7 +41,7 @@ func NewAKSClusterListView(appLayout *layout.AppLayout, subscriptionID string, r
 	aks.Parent = appLayout
 
 	layout.InitKeyBindings[AKSClusterListView, tview.List](
-		appLayout, &aks, aks.List, aksClusterSelectItemFuncMap, 3,
+		appLayout, &aks, aks.List, aksClusterSelectItemFuncMap,
 	)
 
 	return &aks

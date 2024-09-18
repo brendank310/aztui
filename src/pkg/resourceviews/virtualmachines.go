@@ -46,7 +46,7 @@ func NewVirtualMachineListView(appLayout *layout.AppLayout, subscriptionID strin
 	vm.Parent = appLayout
 
 	layout.InitKeyBindings[VirtualMachineListView, tview.List](
-		appLayout, &vm, vm.List, virtualMachineSelectItemFuncMap, 3,
+		appLayout, &vm, vm.List, virtualMachineSelectItemFuncMap,
 	)
 
 	return &vm

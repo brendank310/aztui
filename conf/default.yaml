@@ -1,42 +1,42 @@
-actions:
-  - type: "SubscriptionListView"
-    action: "SpawnResourceGroupListView"
-    takeFocus: true
-  - type: "ResourceGroupListView"
-    action: "SpawnVirtualMachineListView"
-    takeFocus: true
-  - type: "ResourceGroupListView"
-    action: "SpawnAKSClusterListView"
-    takeFocus: true
-  - type: "VirtualMachineListView"
-    action: "SpawnVirtualMachineDetailView"
-    takeFocus: false
-  - type: "VirtualMachineListView"
-    action: "SpawnVirtualMachineCommandListView"
-    takeFocus: true
-  - type: "VirtualMachineListView"
-    action: "SpawnVirtualMachineSerialConsoleView"
-    takeFocus: true
-  - type: "AKSClusterListView"
-    action: "SpawnAKSClusterDetailView"
-    takeFocus: false
-  - type: "AppLayout"
-    action: "Quit"
-    takeFocus: true
-key_mappings:
-  - action: "SpawnResourceGroupListView"
-    key: "Enter"
-  - action: "SpawnVirtualMachineListView"
-    key: "Enter"
-  - action: "SpawnVirtualMachineDetailView"
-    key: "Enter"
-  - action: SpawnAKSClusterListView
-    key: "a"
-  - action: "SpawnAKSClusterDetailView"
-    key: "Enter"
-  - action: "SpawnVirtualMachineCommandListView"
-    key: "Ctrl-R"
-  - action: "SpawnVirtualMachineSerialConsoleView"
-    key: "F5"
-  - action: "Quit"
-    key: "F12"
+views:
+  - view: "SubscriptionListView"
+    actions:
+      - action: "SpawnResourceGroupListView"
+        takeFocus: true
+        key: "Enter"
+        width: 1
+  - view: "ResourceGroupListView"
+    actions:
+      - action: "SpawnVirtualMachineListView"
+        takeFocus: true
+        key: "Enter"
+        width: 1
+      - action: "SpawnAKSClusterListView"
+        takeFocus: true
+        key: "a"
+        width: 1
+  - view: "VirtualMachineListView"
+    actions:
+      - action: "SpawnVirtualMachineDetailView"
+        takeFocus: false
+        key: "Enter"
+        width: 3
+      - action: "SpawnVirtualMachineCommandListView"
+        takeFocus: true
+        key: "Ctrl-R"
+        width: 3
+      - action: "SpawnVirtualMachineSerialConsoleView"
+        takeFocus: true
+        key: "F5"
+        width: 3
+  - view: "AKSClusterListView"
+    actions:
+      - action: "SpawnAKSClusterDetailView"
+        takeFocus: false
+        key: "Enter"
+        width: 3
+  - view: "AppLayout"
+    actions:
+      - action: "Quit"
+        takeFocus:
+        key: "F12"

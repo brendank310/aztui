@@ -46,7 +46,7 @@ func NewAppLayout() *AppLayout {
 	a.Layout.SetDirection(tview.FlexColumn)
 
 	InitKeyBindings[AppLayout, tview.Grid](
-		&a, &a, a.Grid, appFuncMap, 1,
+		&a, &a, a.Grid, appFuncMap,
 	)
 
 	return &a
@@ -94,17 +94,15 @@ func InitKeyBindings[G any, T any](
 	layout *AppLayout,
 	class *G,
 	view TViewWithSetInputCapture[T],
-	funcMap map[string]func(*G) tview.Primitive,
-	width int) {
+	funcMap map[string]func(*G) tview.Primitive) {
 	typeName := utils.GetTypeString[G]()
 
 	// find matching actions
 	actions := make([]config.Action, 0)
-	for _, action := range config.GConfig.Actions {
-		logger.Println("Checking action", action)
-		if typeName == action.Type {
-			actions = append(actions, action)
-			logger.Println("Action found", action.Action)
+	for _, view := range config.GConfig.Views {
+		if view.Name == typeName {
+			actions = view.Actions
+			break
 		}
 	}
 
@@ -114,14 +112,8 @@ func InitKeyBindings[G any, T any](
 
 	// find matching key_mappings
 	keyActionMap := make(map[config.UserKey]config.Action)
-	for _, keyMapping := range config.GConfig.KeyMappings {
-		for _, action := range actions {
-			if keyMapping.Action == action.Action {
-				keyActionMap[keyMapping.Key] = action
-				logger.Println("Key mapping found", keyMapping.Key, action)
-				continue
-			}
-		}
+	for _, action := range actions {
+		keyActionMap[action.Key] = action
 	}
 
 	// set the input capture
@@ -139,7 +131,7 @@ func InitKeyBindings[G any, T any](
 				logger.Println("Calling method", action.Action)
 				view := method(class)
 				if view != nil {
-					layout.AppendPrimitiveView(view, action.TakeFocus, width)
+					layout.AppendPrimitiveView(view, action.TakeFocus, action.Width)
 				}
 				return nil
 			}
