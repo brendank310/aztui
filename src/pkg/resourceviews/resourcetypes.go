@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
@@ -16,15 +17,10 @@ var resourceTypeSelectItemFuncMap = map[string]func(*ResourceTypeListView, strin
 	"SpawnResourceListView": (*ResourceTypeListView).SpawnResourceListView,
 }
 
-func callResourceTypeMethodByName(view *ResourceTypeListView, methodName string, resourceType string) tview.Primitive {
-	// Check if the method exists in the map and call it with the receiver
-	if method, exists := resourceTypeSelectItemFuncMap[methodName]; exists {
-		return method(view, resourceType) // Call the method with the receiver
-	} else {
-		fmt.Printf("Method %s not found\n", methodName)
-	}
-
-	return nil
+type ResourceType struct {
+	Name         string
+	ReadableName string
+	SelectedFunc func()
 }
 
 type ResourceTypeListView struct {
@@ -34,6 +30,7 @@ type ResourceTypeListView struct {
 	SubscriptionID string
 	ResourceGroup  string
 	Parent         *layout.AppLayout
+	ResourceTypes  *[]ResourceType
 }
 
 func NewResourceTypeListView(layout *layout.AppLayout, subscriptionID, resourceGroup string) *ResourceTypeListView {
@@ -51,6 +48,7 @@ func NewResourceTypeListView(layout *layout.AppLayout, subscriptionID, resourceG
 	rt.ResourceGroup = resourceGroup
 	rt.Parent = layout
 
+	rt.Update()
 	return &rt
 }
 
@@ -60,8 +58,18 @@ func (r *ResourceTypeListView) SpawnResourceListView(resourceType string) tview.
 
 	resourceList := NewResourceListView(r.Parent, r.SubscriptionID, r.ResourceGroup, resourceType)
 	resourceList.Update()
-
 	return resourceList.List
+}
+
+func callResourceTypeMethodByName(view *ResourceTypeListView, methodName string, resourceType string) tview.Primitive {
+	// Check if the method exists in the map and call it with the receiver
+	if method, exists := resourceTypeSelectItemFuncMap[methodName]; exists {
+		return method(view, resourceType) // Call the method with the receiver
+	} else {
+		fmt.Printf("Method %s not found\n", methodName)
+	}
+
+	return nil
 }
 
 func (r *ResourceTypeListView) SelectItem(resourceType string) {
@@ -114,10 +122,19 @@ func (r *ResourceTypeListView) Update() error {
 		}
 	}
 
+	// Add the resource types to the list
+	r.ResourceTypes = &[]ResourceType{}
+
 	for resourceType := range resourceTypes {
-		r.List.AddItem(resourceType, "", 0, func() {
-			r.SelectItem(resourceType)
-		})
+		rt := ResourceType{
+			Name:         resourceType,
+			ReadableName: strings.TrimPrefix(resourceType, "Microsoft."),
+			SelectedFunc: func() {
+				r.SelectItem(resourceType)
+			},
+		}
+		r.List.AddItem(rt.ReadableName, "", 0, rt.SelectedFunc)
+		*r.ResourceTypes = append(*r.ResourceTypes, rt)
 	}
 
 	return nil
