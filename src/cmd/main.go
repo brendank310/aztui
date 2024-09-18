@@ -34,8 +34,7 @@ func NewAzTuiState() *AzTuiState {
 
 	configPath := os.Getenv("AZTUI_CONFIG_PATH")
 	if configPath == "" {
-		// configPath = os.Getenv("HOME") + "/.config/aztui.yaml"
-		configPath = "/home/domi/aztui/conf/default.yaml"
+		configPath = os.Getenv("HOME") + "/.config/aztui.yaml"
 	}
 
 	c, err := config.LoadConfig(configPath)
