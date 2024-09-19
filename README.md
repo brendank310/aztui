@@ -16,7 +16,7 @@
 ## Instructions
 
 Install the azcli and login using `az login`. Once logged in you can build and run aztui with:
-`make all && bin\aztui`
+`make all && AZTUI_CONFIG_PATH=conf/default.yaml bin/aztui`
 
 ## Demo
 
