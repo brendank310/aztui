@@ -46,39 +46,6 @@ func NewAppLayout() *AppLayout {
 		FocusedViewIndex: 0,
 	}
 
-	a.App.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Key() == tcell.KeyF10 {
-			a.App.SetFocus(a.InputField)
-			return nil
-		} else if event.Key() == tcell.KeyF1 {
-			if a.Layout.GetItemCount() >= 1 {
-				a.FocusedViewIndex = 0
-				a.App.SetFocus(a.Layout.GetItem(0))
-			}
-		} else if event.Key() == tcell.KeyF2 {
-			if a.Layout.GetItemCount() >= 2 {
-				a.FocusedViewIndex = 1
-				a.App.SetFocus(a.Layout.GetItem(1))
-			}
-		} else if event.Key() == tcell.KeyF3 {
-			if a.Layout.GetItemCount() >= 3 {
-				a.FocusedViewIndex = 2
-				a.App.SetFocus(a.Layout.GetItem(2))
-			}
-		} else if event.Key() == tcell.KeyF4 {
-			if a.Layout.GetItemCount() >= 4 {
-				a.FocusedViewIndex = 3
-				a.App.SetFocus(a.Layout.GetItem(3))
-			}
-		} else if event.Key() == tcell.KeyF5 {
-			if a.Layout.GetItemCount() >= 5 {
-				a.FocusedViewIndex = 4
-				a.App.SetFocus(a.Layout.GetItem(4))
-			}
-		}
-		return event
-	})
-
 	a.Grid.AddItem(a.titleBar, 0, 0, 1, 4, 0, 100, false).
 		AddItem(a.InputField, 1, 0, 1, 4, 0, 100, true).
 		AddItem(a.Layout, 2, 0, 1, 4, 0, 100, false).
