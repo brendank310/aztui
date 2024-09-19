@@ -50,8 +50,17 @@ func NewAzTuiState() *AzTuiState {
 	}
 
 	a.AppLayout.InputField.SetFinishedFunc(func(key tcell.Key) {
-		subscriptionList.UpdateList(a.AppLayout)
-		a.App.SetFocus(subscriptionList.List)
+		if a.FocusedViewIndex == 0 {
+			subscriptionList.UpdateList(a.AppLayout)
+			a.App.SetFocus(subscriptionList.List)
+		} 
+		// else if a.FocusedViewIndex == 1 {
+		// 	logger.Println("SetFinishedFunc trying to focus back on rglist")
+		// 	subscriptionList.ResourceGroupListView.UpdateList(a.AppLayout)
+		// 	logger.Println("before a focus")
+		// 	a.App.SetFocus(subscriptionList.ResourceGroupListView.List)
+		// }
+		
 	})
 
 	return &a
