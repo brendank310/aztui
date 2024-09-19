@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/brendank310/aztui/pkg/config"
 	"github.com/brendank310/aztui/pkg/layout"
@@ -25,6 +26,7 @@ type ResourceListView struct {
 	SubscriptionID string
 	ResourceGroup  string
 	ResourceType   string
+	ReadableName   string
 	Parent         *layout.AppLayout
 }
 
@@ -33,7 +35,9 @@ func NewResourceListView(layout *layout.AppLayout, subscriptionID, resourceGroup
 		List: tview.NewList(),
 	}
 
-	title := fmt.Sprintf("%v (%v)", resourceType, "F4")
+	resourceList.ReadableName = strings.TrimPrefix(resourceType, "Microsoft.")
+
+	title := fmt.Sprintf("%v (%v)", resourceList.ReadableName, "F4")
 
 	resourceList.List.SetBorder(true)
 	resourceList.List.Box.SetTitle(title)
@@ -43,6 +47,7 @@ func NewResourceListView(layout *layout.AppLayout, subscriptionID, resourceGroup
 	resourceList.ResourceGroup = resourceGroup
 	resourceList.ResourceType = resourceType
 	resourceList.Parent = layout
+	layout.FocusedViewIndex = 3
 
 	return &resourceList
 }
@@ -110,8 +115,10 @@ func (v *ResourceListView) SpawnResourceDetailView(resourceName string) tview.Pr
 		}
 	}
 
+	v.Parent.FocusedViewIndex = 4
 	t.SetTitle(resourceName + " Details")
-	t.AddInputField(fmt.Sprintf("%v Name", v.ResourceType), resourceName, 0, nil, nil).
+	t.AddInputField("Name", resourceName, 0, nil, nil).
+		AddInputField("Resource Type", v.ResourceType, 0, nil, nil).
 		AddInputField("Resource ID", *resource.ID, 0, nil, nil).
 		AddInputField("Location", *resource.Location, 0, nil, nil).
 		AddInputField("Provisioning State", *resource.ProvisioningState, 0, nil, nil)

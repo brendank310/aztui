@@ -3,6 +3,7 @@ package resourceviews
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/brendank310/aztui/pkg/config"
 	"github.com/brendank310/aztui/pkg/layout"
@@ -27,12 +28,19 @@ func callResourceGroupMethodByName(view *ResourceGroupListView, methodName strin
 	return nil
 }
 
+type ResourceGroupInfo struct {
+	ResourceGroupName string
+	ResourceGroupLocation string
+	SelectedFunc    func()
+}
+
 type ResourceGroupListView struct {
-	List           *tview.List
-	StatusBarText  string
-	ActionBarText  string
-	SubscriptionID string
-	Parent         *layout.AppLayout
+	List           		*tview.List
+	StatusBarText  		string
+	ActionBarText  		string
+	SubscriptionID	 	string
+	Parent         		*layout.AppLayout
+	ResourceGroupList 	*[]ResourceGroupInfo
 }
 
 func NewResourceGroupListView(layout *layout.AppLayout, subscriptionID string) *ResourceGroupListView {
@@ -48,6 +56,7 @@ func NewResourceGroupListView(layout *layout.AppLayout, subscriptionID string) *
 	rg.ActionBarText = "## Select(Enter) ## | ## Exit(F12) ##"
 	rg.SubscriptionID = subscriptionID
 	rg.Parent = layout
+	layout.FocusedViewIndex = 1
 
 	return &rg
 }
@@ -87,6 +96,8 @@ func (r *ResourceGroupListView) Update() error {
 		return fmt.Errorf("failed to create resource groups client: %v", err)
 	}
 
+	r.ResourceGroupList = &[]ResourceGroupInfo{}
+
 	rgPager := rgClient.NewListPager(nil)
 	for rgPager.More() {
 		ctx := context.Background()
@@ -97,11 +108,26 @@ func (r *ResourceGroupListView) Update() error {
 		for _, rg := range page.Value {
 			resourceGroup := *rg.Name
 			location := *rg.Location
-			r.List.AddItem(resourceGroup, location, 0, func() {
+			selectedFunc := func() {
 				r.SelectItem(resourceGroup)
-			})
+			}
+			*r.ResourceGroupList = append(*r.ResourceGroupList, ResourceGroupInfo{resourceGroup, location, selectedFunc})
+			r.List.AddItem(resourceGroup, location, 0, selectedFunc)
 		}
 	}
 
+	return nil
+}
+
+func (r *ResourceGroupListView) UpdateList(layout *layout.AppLayout) error {
+	r.List.Clear()
+	// Make filtering case insensitive
+	filter := strings.ToLower(layout.InputField.GetText())
+	for _, ResourceGroupInfo := range *r.ResourceGroupList {
+		lowerCaseResourceGroupName := strings.ToLower(ResourceGroupInfo.ResourceGroupName)
+		if strings.Contains(lowerCaseResourceGroupName, filter) {
+			r.List.AddItem(ResourceGroupInfo.ResourceGroupName, ResourceGroupInfo.ResourceGroupLocation, 0, ResourceGroupInfo.SelectedFunc)
+		}
+	}
 	return nil
 }

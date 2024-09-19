@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
@@ -27,13 +28,20 @@ func callResourceTypeMethodByName(view *ResourceTypeListView, methodName string,
 	return nil
 }
 
+type ResourceTypeInfo struct {
+	Name         string
+	ReadableName string
+	SelectedFunc func()
+}
+
 type ResourceTypeListView struct {
-	List           *tview.List
-	StatusBarText  string
-	ActionBarText  string
-	SubscriptionID string
-	ResourceGroup  string
-	Parent         *layout.AppLayout
+	List           		*tview.List
+	StatusBarText  		string
+	ActionBarText  		string
+	SubscriptionID 		string
+	ResourceGroup  		string
+	Parent         		*layout.AppLayout
+	ResourceTypeList  	map[string]ResourceTypeInfo
 }
 
 func NewResourceTypeListView(layout *layout.AppLayout, subscriptionID, resourceGroup string) *ResourceTypeListView {
@@ -50,6 +58,7 @@ func NewResourceTypeListView(layout *layout.AppLayout, subscriptionID, resourceG
 	rt.SubscriptionID = subscriptionID
 	rt.ResourceGroup = resourceGroup
 	rt.Parent = layout
+	layout.FocusedViewIndex = 2
 
 	return &rt
 }
@@ -97,9 +106,8 @@ func (r *ResourceTypeListView) Update() error {
 	pager := resourcesClient.NewListByResourceGroupPager(r.ResourceGroup, nil)
 
 	r.List.Clear()
-
 	// Create a map to store unique resource types
-	resourceTypes := make(map[string]struct{})
+	r.ResourceTypeList = make(map[string]ResourceTypeInfo, 0)
 	// Iterate through the pages and collect resource types
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -109,15 +117,19 @@ func (r *ResourceTypeListView) Update() error {
 
 		for _, resource := range page.Value {
 			if resource.Type != nil {
-				resourceTypes[*resource.Type] = struct{}{}
+				resourceType := *resource.Type
+				name := resourceType
+				readableName := strings.TrimPrefix(resourceType, "Microsoft.")
+				selectedFunc := func() {
+					r.SelectItem(name)
+				}
+				(r.ResourceTypeList)[name] = ResourceTypeInfo{name, readableName, selectedFunc}
 			}
 		}
 	}
 
-	for resourceType := range resourceTypes {
-		r.List.AddItem(resourceType, "", 0, func() {
-			r.SelectItem(resourceType)
-		})
+	for _, resourceTypeInfo := range r.ResourceTypeList {
+		r.List.AddItem(resourceTypeInfo.Name, "", 0, resourceTypeInfo.SelectedFunc)
 	}
 
 	return nil

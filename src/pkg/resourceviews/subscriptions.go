@@ -29,6 +29,7 @@ type SubscriptionListView struct {
 	ActionBarText    string
 	Parent           *layout.AppLayout
 	SubscriptionList *[]SubscriptionInfo
+	ResourceGroupListView *ResourceGroupListView
 }
 
 func NewSubscriptionListView(layout *layout.AppLayout) *SubscriptionListView {
@@ -53,9 +54,9 @@ func (s *SubscriptionListView) SpawnResourceGroupListView(subscriptionID string)
 	s.Parent.RemoveViews(1)
 
 	// Spawn new resource group list view
-	rgList := NewResourceGroupListView(s.Parent, subscriptionID)
-	rgList.Update()
-	return rgList.List
+	s.ResourceGroupListView = NewResourceGroupListView(s.Parent, subscriptionID)
+	s.ResourceGroupListView.Update()
+	return s.ResourceGroupListView.List
 }
 
 // Function to call a method by name
