@@ -35,13 +35,13 @@ type ResourceTypeInfo struct {
 }
 
 type ResourceTypeListView struct {
-	List           		*tview.List
-	StatusBarText  		string
-	ActionBarText  		string
-	SubscriptionID 		string
-	ResourceGroup  		string
-	Parent         		*layout.AppLayout
-	ResourceTypeList  	map[string]ResourceTypeInfo
+	List             *tview.List
+	StatusBarText    string
+	ActionBarText    string
+	SubscriptionID   string
+	ResourceGroup    string
+	Parent           *layout.AppLayout
+	ResourceTypeList map[string]ResourceTypeInfo
 }
 
 func NewResourceTypeListView(layout *layout.AppLayout, subscriptionID, resourceGroup string) *ResourceTypeListView {
@@ -129,7 +129,7 @@ func (r *ResourceTypeListView) Update() error {
 	}
 
 	for _, resourceTypeInfo := range r.ResourceTypeList {
-		r.List.AddItem(resourceTypeInfo.Name, "", 0, resourceTypeInfo.SelectedFunc)
+		r.List.AddItem(resourceTypeInfo.ReadableName, "", 0, resourceTypeInfo.SelectedFunc)
 	}
 
 	return nil
