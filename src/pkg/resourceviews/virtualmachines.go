@@ -8,7 +8,7 @@ import (
 
 	"github.com/brendank310/aztui/pkg/azcli"
 	"github.com/brendank310/aztui/pkg/consoles"
-	"github.com/brendank310/aztui/pkg/layout"
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
@@ -27,10 +27,10 @@ type VirtualMachineListView struct {
 	ActionBarText  string
 	SubscriptionID string
 	ResourceGroup  string
-	Parent         *layout.AppLayout
+	Parent         *AppLayout
 }
 
-func NewVirtualMachineListView(appLayout *layout.AppLayout, subscriptionID string, resourceGroup string) *VirtualMachineListView {
+func NewVirtualMachineListView(appLayout *AppLayout, subscriptionID string, resourceGroup string) *VirtualMachineListView {
 	vm := VirtualMachineListView{
 		List: tview.NewList(),
 	}
@@ -45,11 +45,32 @@ func NewVirtualMachineListView(appLayout *layout.AppLayout, subscriptionID strin
 	vm.ResourceGroup = resourceGroup
 	vm.Parent = appLayout
 
-	layout.InitKeyBindings[VirtualMachineListView, tview.List](
-		appLayout, &vm, vm.List, virtualMachineSelectItemFuncMap,
-	)
+	InitViewKeyBindings(&vm)
 
 	return &vm
+}
+
+func (v *VirtualMachineListView) Name() string {
+	return "SubscriptionListView"
+}
+
+func (v *VirtualMachineListView) SetInputCapture(f func(event *tcell.EventKey) *tcell.EventKey) {
+	v.List.SetInputCapture(f)
+}
+
+func (v *VirtualMachineListView) CustomInputHandler() func(event *tcell.EventKey) *tcell.EventKey {
+	return nil
+}
+
+func (v *VirtualMachineListView) CallAction(action string) (tview.Primitive, error) {
+	if actionFunc, ok := virtualMachineSelectItemFuncMap[action]; ok {
+		return actionFunc(v), nil
+	}
+	return nil, fmt.Errorf("no action for %s", action)
+}
+
+func (v *VirtualMachineListView) AppendPrimitiveView(p tview.Primitive, takeFocus bool, width int) {
+	v.Parent.AppendPrimitiveView(p, takeFocus, width)
 }
 
 func (v *VirtualMachineListView) SpawnVirtualMachineDetailView() tview.Primitive {

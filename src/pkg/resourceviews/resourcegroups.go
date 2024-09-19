@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/brendank310/aztui/pkg/layout"
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
@@ -21,10 +21,10 @@ type ResourceGroupListView struct {
 	StatusBarText  string
 	ActionBarText  string
 	SubscriptionID string
-	Parent         *layout.AppLayout
+	Parent         *AppLayout
 }
 
-func NewResourceGroupListView(appLayout *layout.AppLayout, subscriptionID string) *ResourceGroupListView {
+func NewResourceGroupListView(appLayout *AppLayout, subscriptionID string) *ResourceGroupListView {
 	rg := ResourceGroupListView{
 		List: tview.NewList(),
 	}
@@ -38,9 +38,32 @@ func NewResourceGroupListView(appLayout *layout.AppLayout, subscriptionID string
 	rg.SubscriptionID = subscriptionID
 	rg.Parent = appLayout
 
-	layout.InitKeyBindings[ResourceGroupListView, tview.List](appLayout, &rg, rg.List, resourceGroupSelectItemFuncMap)
+	InitViewKeyBindings(&rg)
 
 	return &rg
+}
+
+func (r *ResourceGroupListView) Name() string {
+	return "SubscriptionListView"
+}
+
+func (r *ResourceGroupListView) SetInputCapture(f func(event *tcell.EventKey) *tcell.EventKey) {
+	r.List.SetInputCapture(f)
+}
+
+func (r *ResourceGroupListView) CustomInputHandler() func(event *tcell.EventKey) *tcell.EventKey {
+	return nil
+}
+
+func (r *ResourceGroupListView) CallAction(action string) (tview.Primitive, error) {
+	if actionFunc, ok := resourceGroupSelectItemFuncMap[action]; ok {
+		return actionFunc(r), nil
+	}
+	return nil, fmt.Errorf("no action for %s", action)
+}
+
+func (r *ResourceGroupListView) AppendPrimitiveView(p tview.Primitive, takeFocus bool, width int) {
+	r.Parent.AppendPrimitiveView(p, takeFocus, width)
 }
 
 func (r *ResourceGroupListView) SpawnVirtualMachineListView() tview.Primitive {

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/brendank310/aztui/pkg/layout"
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
@@ -19,10 +19,10 @@ type SubscriptionListView struct {
 	List          *tview.List
 	StatusBarText string
 	ActionBarText string
-	Parent        *layout.AppLayout
+	Parent        *AppLayout
 }
 
-func NewSubscriptionListView(appLayout *layout.AppLayout) *SubscriptionListView {
+func NewSubscriptionListView(appLayout *AppLayout) *SubscriptionListView {
 	s := SubscriptionListView{
 		List: tview.NewList(),
 	}
@@ -34,13 +34,34 @@ func NewSubscriptionListView(appLayout *layout.AppLayout) *SubscriptionListView 
 	s.ActionBarText = "## Select(Enter) ## | ## Exit(F12) ##"
 	s.Parent = appLayout
 
-	layout.InitKeyBindings[SubscriptionListView, tview.List](
-		appLayout, &s, s.List, subscriptionSelectItemFuncMap,
-	)
+	InitViewKeyBindings(&s)
 
 	s.Update()
 	appLayout.AppendPrimitiveView(s.List, true, 1)
 	return &s
+}
+
+func (s *SubscriptionListView) Name() string {
+	return "SubscriptionListView"
+}
+
+func (s *SubscriptionListView) SetInputCapture(f func(event *tcell.EventKey) *tcell.EventKey) {
+	s.List.SetInputCapture(f)
+}
+
+func (s *SubscriptionListView) CustomInputHandler() func(event *tcell.EventKey) *tcell.EventKey {
+	return nil
+}
+
+func (s *SubscriptionListView) CallAction(action string) (tview.Primitive, error) {
+	if actionFunc, ok := subscriptionSelectItemFuncMap[action]; ok {
+		return actionFunc(s), nil
+	}
+	return nil, fmt.Errorf("no action for %s", action)
+}
+
+func (s *SubscriptionListView) AppendPrimitiveView(p tview.Primitive, takeFocus bool, width int) {
+	s.Parent.AppendPrimitiveView(p, takeFocus, width)
 }
 
 func (s *SubscriptionListView) SpawnResourceGroupListView() tview.Primitive {

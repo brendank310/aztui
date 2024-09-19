@@ -8,7 +8,6 @@ import (
 
 	_ "github.com/brendank310/aztui/pkg/azcli"
 	"github.com/brendank310/aztui/pkg/config"
-	"github.com/brendank310/aztui/pkg/layout"
 	"github.com/brendank310/aztui/pkg/logger"
 	"github.com/brendank310/aztui/pkg/resourceviews"
 
@@ -17,7 +16,7 @@ import (
 
 type AzTuiState struct {
 	// Basic TUI variables
-	*layout.AppLayout
+	*resourceviews.AppLayout
 	config.Config
 }
 
@@ -39,7 +38,7 @@ func NewAzTuiState() *AzTuiState {
 	}
 
 	a := AzTuiState{
-		AppLayout: layout.NewAppLayout(),
+		AppLayout: resourceviews.NewAppLayout(),
 		Config:    c,
 	}
 
