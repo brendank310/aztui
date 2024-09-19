@@ -47,6 +47,8 @@ func NewVirtualMachineListView(appLayout *AppLayout, subscriptionID string, reso
 
 	InitViewKeyBindings(&vm)
 
+	vm.Update()
+
 	return &vm
 }
 

@@ -49,6 +49,8 @@ func NewResourceTypeListView(layout *AppLayout, subscriptionID, resourceGroup st
 
 	InitViewKeyBindings(&rt)
 
+	rt.Update()
+
 	return &rt
 }
 
@@ -82,7 +84,6 @@ func (r *ResourceTypeListView) SpawnResourceListView() tview.Primitive {
 	r.Parent.RemoveViews(3)
 
 	resourceList := NewResourceListView(r.Parent, r.SubscriptionID, r.ResourceGroup, resourceType)
-	resourceList.Update()
 
 	return resourceList.List
 }

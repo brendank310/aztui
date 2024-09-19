@@ -49,6 +49,8 @@ func NewResourceGroupListView(appLayout *AppLayout, subscriptionID string) *Reso
 	InitViewKeyBindings(&rg)
 	appLayout.FocusedViewIndex = 1
 
+	rg.Update()
+
 	return &rg
 }
 
@@ -79,10 +81,7 @@ func (r *ResourceGroupListView) SpawnResourceTypeListView() tview.Primitive {
 	resourceGroup, _ := r.List.GetItemText(r.List.GetCurrentItem())
 	// Remove previous views if exist starting from the one at index 2
 	r.Parent.RemoveViews(2)
-
 	rtList := NewResourceTypeListView(r.Parent, r.SubscriptionID, resourceGroup)
-	rtList.Update()
-
 	return rtList.List
 }
 
@@ -90,10 +89,7 @@ func (r *ResourceGroupListView) SpawnVirtualMachineListView() tview.Primitive {
 	resourceGroup, _ := r.List.GetItemText(r.List.GetCurrentItem())
 	// Remove previous views if exist starting from the one at index 2
 	r.Parent.RemoveViews(2)
-
 	vmList := NewVirtualMachineListView(r.Parent, r.SubscriptionID, resourceGroup)
-	vmList.Update()
-
 	return vmList.List
 }
 
@@ -101,10 +97,7 @@ func (r *ResourceGroupListView) SpawnAKSClusterListView() tview.Primitive {
 	resourceGroup, _ := r.List.GetItemText(r.List.GetCurrentItem())
 	// Remove previous views if exist starting from the one at index 2
 	r.Parent.RemoveViews(2)
-
 	aksList := NewAKSClusterListView(r.Parent, r.SubscriptionID, resourceGroup)
-	aksList.Update()
-
 	return aksList.List
 }
 

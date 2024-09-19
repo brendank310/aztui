@@ -76,7 +76,6 @@ func (s *SubscriptionListView) SpawnResourceGroupListView() tview.Primitive {
 	_, subscriptionID := s.List.GetItemText(s.List.GetCurrentItem())
 	s.Parent.RemoveViews(1)
 	rgList := NewResourceGroupListView(s.Parent, subscriptionID)
-	rgList.Update()
 	s.ResourceGroupListView = rgList
 	return rgList.List
 }

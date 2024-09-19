@@ -30,10 +30,12 @@ func NewVMCommandListView(resourceGroupName string, VM string) *VMCommandListVie
 	s.VM = VM
 	s.ResourceGroup = resourceGroupName
 
+	s.Update()
+
 	return &s
 }
 
-func (s *VMCommandListView) Update(selectedFunc func()) error {
+func (s *VMCommandListView) Update() error {
 	cmdMap, err := azcli.GetResourceCommands("vm")
 	if err != nil {
 		panic(err)

@@ -42,6 +42,8 @@ func NewAKSClusterListView(appLayout *AppLayout, subscriptionID string, resource
 
 	InitViewKeyBindings(&aks)
 
+	aks.Update()
+
 	return &aks
 }
 

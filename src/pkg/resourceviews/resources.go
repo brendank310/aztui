@@ -51,6 +51,8 @@ func NewResourceListView(layout *AppLayout, subscriptionID, resourceGroup, resou
 
 	InitViewKeyBindings(&resourceList)
 
+	resourceList.Update()
+
 	return &resourceList
 }
 
