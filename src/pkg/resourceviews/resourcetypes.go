@@ -76,7 +76,8 @@ func (r *ResourceTypeListView) AppendPrimitiveView(p tview.Primitive, takeFocus 
 }
 
 func (r *ResourceTypeListView) SpawnResourceListView() tview.Primitive {
-	resourceType, _ := r.List.GetItemText(r.List.GetCurrentItem())
+	readableName, _ := r.List.GetItemText(r.List.GetCurrentItem())
+	resourceType := r.ResourceTypeList[readableName].Name
 	// Remove previous views if exist strating from the one at index 3
 	r.Parent.RemoveViews(3)
 
@@ -120,7 +121,7 @@ func (r *ResourceTypeListView) Update() error {
 				resourceType := *resource.Type
 				name := resourceType
 				readableName := strings.TrimPrefix(resourceType, "Microsoft.")
-				(r.ResourceTypeList)[name] = ResourceTypeInfo{name, readableName}
+				(r.ResourceTypeList)[readableName] = ResourceTypeInfo{name, readableName}
 			}
 		}
 	}
