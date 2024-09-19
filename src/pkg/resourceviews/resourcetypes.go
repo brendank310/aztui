@@ -83,6 +83,18 @@ func (r *ResourceTypeListView) SpawnResourceListView() tview.Primitive {
 	// Remove previous views if exist strating from the one at index 3
 	r.Parent.RemoveViews(3)
 
+	if resourceType == "Microsoft.ContainerService/managedClusters" {
+		// Spawn AKS Cluster List View
+		aksClusterList := NewAKSClusterListView(r.Parent, r.SubscriptionID, r.ResourceGroup)
+
+		return aksClusterList.List
+	}
+	if resourceType == "Microsoft.Compute/virtualMachines" {
+		// Spawn Virtual Machine List View
+		vmList := NewVirtualMachineListView(r.Parent, r.SubscriptionID, r.ResourceGroup)
+
+		return vmList.List
+	}
 	resourceList := NewResourceListView(r.Parent, r.SubscriptionID, r.ResourceGroup, resourceType)
 
 	return resourceList.List
