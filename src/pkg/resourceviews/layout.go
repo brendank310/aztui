@@ -9,7 +9,13 @@ import (
 )
 
 var appFuncMap = map[string]func(*AppLayout) tview.Primitive{
-	"Quit": (*AppLayout).Quit,
+	"Quit":            (*AppLayout).Quit,
+	"FocusView0":      (*AppLayout).FocusView0,
+	"FocusView1":      (*AppLayout).FocusView1,
+	"FocusView2":      (*AppLayout).FocusView2,
+	"FocusView3":      (*AppLayout).FocusView3,
+	"FocusView4":      (*AppLayout).FocusView4,
+	"FocusInputField": (*AppLayout).FocusInputField,
 }
 
 type AppLayout struct {
@@ -80,7 +86,7 @@ func NewAppLayout() *AppLayout {
 		AddItem(a.ActionBar, 4, 0, 1, 4, 0, 100, false)
 	a.Layout.SetDirection(tview.FlexColumn)
 
-	// InitViewKeyBindings(&a)
+	InitViewKeyBindings(&a)
 
 	return &a
 }
@@ -111,6 +117,48 @@ func (a *AppLayout) AppendPrimitiveView(p tview.Primitive, takeFocus bool, width
 	}
 }
 
+func (a *AppLayout) FocusView(index int) {
+	if a.Layout.GetItemCount() >= index+1 {
+		a.FocusedViewIndex = index
+		a.App.SetFocus(a.Layout.GetItem(index))
+	}
+}
+
+func (a *AppLayout) FocusView0() tview.Primitive {
+	a.FocusView(0)
+	return nil
+}
+
+func (a *AppLayout) FocusView1() tview.Primitive {
+	a.FocusView(1)
+	return nil
+}
+
+func (a *AppLayout) FocusView2() tview.Primitive {
+	a.FocusView(2)
+	return nil
+}
+
+func (a *AppLayout) FocusView3() tview.Primitive {
+	a.FocusView(3)
+	return nil
+}
+
+func (a *AppLayout) FocusView4() tview.Primitive {
+	a.FocusView(4)
+	return nil
+}
+
+func (a *AppLayout) FocusInputField() tview.Primitive {
+	a.App.SetFocus(a.InputField)
+	return nil
+}
+
+func (a *AppLayout) Quit() tview.Primitive {
+	a.App.Stop()
+	return nil
+}
+
 func (a *AppLayout) AppendListView(l *tview.List) {
 	a.Layout.AddItem(l, 0, 2, true)
 }
@@ -130,11 +178,6 @@ func (a *AppLayout) RemoveTextView(t *tview.TextView) {
 }
 
 func (a *AppLayout) Update() error {
-	return nil
-}
-
-func (a *AppLayout) Quit() tview.Primitive {
-	a.App.Stop()
 	return nil
 }
 

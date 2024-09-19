@@ -19,11 +19,11 @@ views:
         width: 3
       - action: "SpawnVirtualMachineCommandListView"
         takeFocus: true
-        key: "Ctrl-R"
+        key: "c"
         width: 3
       - action: "SpawnVirtualMachineSerialConsoleView"
         takeFocus: true
-        key: "F5"
+        key: "s"
         width: 3
   - view: "AKSClusterListView"
     actions:
@@ -46,5 +46,16 @@ views:
   - view: "AppLayout"
     actions:
       - action: "Quit"
-        takeFocus:
         key: "F12"
+      - action: "FocusView0"
+        key: "F1"
+      - action: "FocusView1"
+        key: "F2"
+      - action: "FocusView2"
+        key: "F3"
+      - action: "FocusView3"
+        key: "F4"
+      - action: "FocusView4"
+        key: "F5"
+      - action: "FocusInputField"
+        key: "F10"
