@@ -13,12 +13,14 @@ var appFuncMap = map[string]func(*AppLayout) tview.Primitive{
 }
 
 type AppLayout struct {
-	App       *tview.Application
-	Grid      *tview.Grid
-	Layout    *tview.Flex
-	titleBar  *tview.TextView
-	actionBar *tview.TextView
-	statusBar *tview.TextView
+	App              *tview.Application
+	Grid             *tview.Grid
+	Layout           *tview.Flex
+	InputField       *tview.InputField
+	titleBar         *tview.TextView
+	ActionBar        *tview.TextView
+	statusBar        *tview.TextView
+	FocusedViewIndex int
 }
 
 func NewAppLayout() *AppLayout {
@@ -28,27 +30,63 @@ func NewAppLayout() *AppLayout {
 		App: tview.NewApplication(),
 		Grid: tview.NewGrid().
 			SetColumns(-1).
-			SetRows(1, -6, 1, 1).
+			SetRows(1, 1, -6, 1, 1).
 			SetBorders(true),
-		Layout:    tview.NewFlex(),
-		titleBar:  tview.NewTextView().SetLabel("aztui"),
-		actionBar: tview.NewTextView().SetLabel("Ctrl-C to exit"),
-		statusBar: tview.NewTextView().SetLabel(status),
+		Layout:           tview.NewFlex(),
+		InputField:       tview.NewInputField().SetLabel("(F10) Filter: "),
+		titleBar:         tview.NewTextView().SetLabel("aztui"),
+		ActionBar:        tview.NewTextView().SetLabel("## Select(Enter) ## | ## Filter(F10) ## | ## Views(F1-F5) ## | ## Exit(Ctrl-C) ##"),
+		statusBar:        tview.NewTextView().SetLabel(status),
+		FocusedViewIndex: 0,
 	}
 
+	a.App.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyF10 {
+			a.App.SetFocus(a.InputField)
+			return nil
+		} else if event.Key() == tcell.KeyF1 {
+			if a.Layout.GetItemCount() >= 1 {
+				a.FocusedViewIndex = 0
+				a.App.SetFocus(a.Layout.GetItem(0))
+			}
+		} else if event.Key() == tcell.KeyF2 {
+			if a.Layout.GetItemCount() >= 2 {
+				a.FocusedViewIndex = 1
+				a.App.SetFocus(a.Layout.GetItem(1))
+			}
+		} else if event.Key() == tcell.KeyF3 {
+			if a.Layout.GetItemCount() >= 3 {
+				a.FocusedViewIndex = 2
+				a.App.SetFocus(a.Layout.GetItem(2))
+			}
+		} else if event.Key() == tcell.KeyF4 {
+			if a.Layout.GetItemCount() >= 4 {
+				a.FocusedViewIndex = 3
+				a.App.SetFocus(a.Layout.GetItem(3))
+			}
+		} else if event.Key() == tcell.KeyF5 {
+			if a.Layout.GetItemCount() >= 5 {
+				a.FocusedViewIndex = 4
+				a.App.SetFocus(a.Layout.GetItem(4))
+			}
+		}
+		return event
+	})
+
 	a.Grid.AddItem(a.titleBar, 0, 0, 1, 4, 0, 100, false).
-		AddItem(a.Layout, 1, 0, 1, 4, 0, 100, true).
-		AddItem(a.statusBar, 2, 0, 1, 4, 0, 100, false).
-		AddItem(a.actionBar, 3, 0, 1, 4, 0, 100, false)
+		AddItem(a.InputField, 1, 0, 1, 4, 0, 100, true).
+		AddItem(a.Layout, 2, 0, 1, 4, 0, 100, false).
+		AddItem(a.statusBar, 3, 0, 1, 4, 0, 100, false).
+		AddItem(a.ActionBar, 4, 0, 1, 4, 0, 100, false)
 	a.Layout.SetDirection(tview.FlexColumn)
 
-	InitViewKeyBindings(&a)
+	// InitViewKeyBindings(&a)
 
 	return &a
 }
 
 func (a *AppLayout) Name() string {
-	return "SubscriptionListView"
+	return "AppLayout"
 }
 
 func (a *AppLayout) SetInputCapture(f func(event *tcell.EventKey) *tcell.EventKey) {
@@ -98,4 +136,15 @@ func (a *AppLayout) Update() error {
 func (a *AppLayout) Quit() tview.Primitive {
 	a.App.Stop()
 	return nil
+}
+
+// index : index of a first view that should be removed
+func (a *AppLayout) RemoveViews(index int) {
+	itemCount := a.Layout.GetItemCount()
+
+	for i := index; i < itemCount; i++ {
+		a.Layout.RemoveItem(a.Layout.GetItem(index))
+	}
+	a.FocusedViewIndex = 0
+	a.App.SetFocus(a.Layout.GetItem(0))
 }

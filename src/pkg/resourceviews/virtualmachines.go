@@ -39,7 +39,7 @@ func NewVirtualMachineListView(appLayout *AppLayout, subscriptionID string, reso
 
 	vm.List.SetBorder(true)
 	vm.List.Box.SetTitle(title)
-	vm.List.ShowSecondaryText(false)
+	vm.List.ShowSecondaryText(true)
 	vm.ActionBarText = "## Subscription List(F1) ## | ## Resource Group List(F2) ## | ## Run Command(F5) ## | ## Serial Console (F7) ## | ## Exit(F12) ##"
 	vm.SubscriptionID = subscriptionID
 	vm.ResourceGroup = resourceGroup
@@ -51,7 +51,7 @@ func NewVirtualMachineListView(appLayout *AppLayout, subscriptionID string, reso
 }
 
 func (v *VirtualMachineListView) Name() string {
-	return "SubscriptionListView"
+	return "VirtualMachineListView"
 }
 
 func (v *VirtualMachineListView) SetInputCapture(f func(event *tcell.EventKey) *tcell.EventKey) {
@@ -75,6 +75,7 @@ func (v *VirtualMachineListView) AppendPrimitiveView(p tview.Primitive, takeFocu
 
 func (v *VirtualMachineListView) SpawnVirtualMachineDetailView() tview.Primitive {
 	vmName, _ := v.List.GetItemText(v.List.GetCurrentItem())
+	v.Parent.RemoveViews(4)
 	t := tview.NewForm()
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
@@ -201,7 +202,8 @@ func (v *VirtualMachineListView) Update() error {
 
 		for _, vm := range page.Value {
 			vmName := *vm.Name
-			v.List.AddItem(vmName, "", 0, nil)
+			vmLocation := *vm.Location
+			v.List.AddItem(vmName, vmLocation, 0, nil)
 		}
 	}
 

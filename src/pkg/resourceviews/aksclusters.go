@@ -46,7 +46,7 @@ func NewAKSClusterListView(appLayout *AppLayout, subscriptionID string, resource
 }
 
 func (v *AKSClusterListView) Name() string {
-	return "SubscriptionListView"
+	return "AKSClusterListView"
 }
 
 func (v *AKSClusterListView) SetInputCapture(f func(event *tcell.EventKey) *tcell.EventKey) {

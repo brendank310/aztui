@@ -3,6 +3,7 @@ package resourceviews
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -15,11 +16,18 @@ var subscriptionSelectItemFuncMap = map[string]func(*SubscriptionListView) tview
 	"SpawnResourceGroupListView": (*SubscriptionListView).SpawnResourceGroupListView,
 }
 
+type SubscriptionInfo struct {
+	SubscriptionName string
+	SubscriptionID   string
+}
+
 type SubscriptionListView struct {
-	List          *tview.List
-	StatusBarText string
-	ActionBarText string
-	Parent        *AppLayout
+	List                  *tview.List
+	StatusBarText         string
+	ActionBarText         string
+	Parent                *AppLayout
+	SubscriptionList      *[]SubscriptionInfo
+	ResourceGroupListView *ResourceGroupListView
 }
 
 func NewSubscriptionListView(appLayout *AppLayout) *SubscriptionListView {
@@ -66,6 +74,7 @@ func (s *SubscriptionListView) AppendPrimitiveView(p tview.Primitive, takeFocus 
 
 func (s *SubscriptionListView) SpawnResourceGroupListView() tview.Primitive {
 	_, subscriptionID := s.List.GetItemText(s.List.GetCurrentItem())
+	s.Parent.RemoveViews(1)
 	rgList := NewResourceGroupListView(s.Parent, subscriptionID)
 	rgList.Update()
 	return rgList.List
@@ -82,6 +91,9 @@ func (s *SubscriptionListView) Update() error {
 		return fmt.Errorf("failed to create subscriptions client: %v", err)
 	}
 
+	// Initialize the subscription list
+	s.SubscriptionList = &[]SubscriptionInfo{}
+
 	// List subscriptions
 	subPager := subClient.NewListPager(nil)
 	ctx := context.Background()
@@ -94,8 +106,22 @@ func (s *SubscriptionListView) Update() error {
 			subscriptionID := *subscription.SubscriptionID
 			subscriptionName := *subscription.DisplayName
 			s.List.AddItem(subscriptionName, subscriptionID, 0, nil)
+			*s.SubscriptionList = append(*s.SubscriptionList, SubscriptionInfo{subscriptionName, subscriptionID})
 		}
 	}
 
+	return nil
+}
+
+func (s *SubscriptionListView) UpdateList(layout *AppLayout) error {
+	s.List.Clear()
+	// Make filtering case insensitive
+	filter := strings.ToLower(layout.InputField.GetText())
+	for _, SubscriptionInfo := range *s.SubscriptionList {
+		lowerCaseSubscriptionName := strings.ToLower(SubscriptionInfo.SubscriptionName)
+		if strings.Contains(lowerCaseSubscriptionName, filter) {
+			s.List.AddItem(SubscriptionInfo.SubscriptionName, SubscriptionInfo.SubscriptionID, 0, nil)
+		}
+	}
 	return nil
 }

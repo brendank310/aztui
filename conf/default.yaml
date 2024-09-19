@@ -7,13 +7,9 @@ views:
         width: 1
   - view: "ResourceGroupListView"
     actions:
-      - action: "SpawnVirtualMachineListView"
+      - action: "SpawnResourceTypeListView"
         takeFocus: true
         key: "Enter"
-        width: 1
-      - action: "SpawnAKSClusterListView"
-        takeFocus: true
-        key: "a"
         width: 1
   - view: "VirtualMachineListView"
     actions:
@@ -35,6 +31,18 @@ views:
         takeFocus: false
         key: "Enter"
         width: 3
+  - view: "ResourceListView"
+    actions:
+      - action: "SpawnResourceDetailView"
+        takeFocus: false
+        key: "Enter"
+        width: 3
+  - view: "ResourceTypeListView"
+    actions:
+      - action: "SpawnResourceListView"
+        takeFocus: true
+        key: "Enter"
+        width: 1
   - view: "AppLayout"
     actions:
       - action: "Quit"

@@ -3,6 +3,7 @@ package resourceviews
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -12,16 +13,21 @@ import (
 )
 
 var resourceGroupSelectItemFuncMap = map[string]func(*ResourceGroupListView) tview.Primitive{
-	"SpawnAKSClusterListView":     (*ResourceGroupListView).SpawnAKSClusterListView,
-	"SpawnVirtualMachineListView": (*ResourceGroupListView).SpawnVirtualMachineListView,
+	"SpawnResourceTypeListView": (*ResourceGroupListView).SpawnResourceTypeListView,
+}
+
+type ResourceGroupInfo struct {
+	ResourceGroupName     string
+	ResourceGroupLocation string
 }
 
 type ResourceGroupListView struct {
-	List           *tview.List
-	StatusBarText  string
-	ActionBarText  string
-	SubscriptionID string
-	Parent         *AppLayout
+	List              *tview.List
+	StatusBarText     string
+	ActionBarText     string
+	SubscriptionID    string
+	Parent            *AppLayout
+	ResourceGroupList *[]ResourceGroupInfo
 }
 
 func NewResourceGroupListView(appLayout *AppLayout, subscriptionID string) *ResourceGroupListView {
@@ -33,18 +39,19 @@ func NewResourceGroupListView(appLayout *AppLayout, subscriptionID string) *Reso
 
 	rg.List.SetBorder(true)
 	rg.List.Box.SetTitle(title)
-	rg.List.ShowSecondaryText(false)
+	rg.List.ShowSecondaryText(true)
 	rg.ActionBarText = "## Select(Enter) ## | ## Exit(F12) ##"
 	rg.SubscriptionID = subscriptionID
 	rg.Parent = appLayout
 
 	InitViewKeyBindings(&rg)
+	appLayout.FocusedViewIndex = 1
 
 	return &rg
 }
 
 func (r *ResourceGroupListView) Name() string {
-	return "SubscriptionListView"
+	return "ResourceGroupListView"
 }
 
 func (r *ResourceGroupListView) SetInputCapture(f func(event *tcell.EventKey) *tcell.EventKey) {
@@ -66,19 +73,15 @@ func (r *ResourceGroupListView) AppendPrimitiveView(p tview.Primitive, takeFocus
 	r.Parent.AppendPrimitiveView(p, takeFocus, width)
 }
 
-func (r *ResourceGroupListView) SpawnVirtualMachineListView() tview.Primitive {
+func (r *ResourceGroupListView) SpawnResourceTypeListView() tview.Primitive {
 	resourceGroup, _ := r.List.GetItemText(r.List.GetCurrentItem())
-	vmList := NewVirtualMachineListView(r.Parent, r.SubscriptionID, resourceGroup)
-	vmList.Update()
-	return vmList.List
-}
+	// Remove previous views if exist strating from the one at index 2
+	r.Parent.RemoveViews(2)
 
-func (r *ResourceGroupListView) SpawnAKSClusterListView() tview.Primitive {
-	resourceGroup, _ := r.List.GetItemText(r.List.GetCurrentItem())
-	aksList := NewAKSClusterListView(r.Parent, r.SubscriptionID, resourceGroup)
-	aksList.Update()
+	rtList := NewResourceTypeListView(r.Parent, r.SubscriptionID, resourceGroup)
+	rtList.Update()
 
-	return aksList.List
+	return rtList.List
 }
 
 func (r *ResourceGroupListView) Update() error {
@@ -93,6 +96,8 @@ func (r *ResourceGroupListView) Update() error {
 		return fmt.Errorf("failed to create resource groups client: %v", err)
 	}
 
+	r.ResourceGroupList = &[]ResourceGroupInfo{}
+
 	rgPager := rgClient.NewListPager(nil)
 	for rgPager.More() {
 		ctx := context.Background()
@@ -102,9 +107,24 @@ func (r *ResourceGroupListView) Update() error {
 		}
 		for _, rg := range page.Value {
 			resourceGroup := *rg.Name
-			r.List.AddItem(resourceGroup, "", 0, nil)
+			location := *rg.Location
+			*r.ResourceGroupList = append(*r.ResourceGroupList, ResourceGroupInfo{resourceGroup, location})
+			r.List.AddItem(resourceGroup, location, 0, nil)
 		}
 	}
 
+	return nil
+}
+
+func (r *ResourceGroupListView) UpdateList(layout *AppLayout) error {
+	r.List.Clear()
+	// Make filtering case insensitive
+	filter := strings.ToLower(layout.InputField.GetText())
+	for _, ResourceGroupInfo := range *r.ResourceGroupList {
+		lowerCaseResourceGroupName := strings.ToLower(ResourceGroupInfo.ResourceGroupName)
+		if strings.Contains(lowerCaseResourceGroupName, filter) {
+			r.List.AddItem(ResourceGroupInfo.ResourceGroupName, ResourceGroupInfo.ResourceGroupLocation, 0, nil)
+		}
+	}
 	return nil
 }
