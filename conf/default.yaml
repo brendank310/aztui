@@ -11,6 +11,14 @@ views:
         takeFocus: true
         key: "Enter"
         width: 1
+      - action: "SpawnVirtualMachineListView"
+        takeFocus: true
+        key: "v"
+        width: 1
+      - action: "SpawnAKSClusterListView"
+        takeFocus: true
+        key: "a"
+        width: 1
   - view: "VirtualMachineListView"
     actions:
       - action: "SpawnVirtualMachineDetailView"
