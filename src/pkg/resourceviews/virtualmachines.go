@@ -120,6 +120,7 @@ func (v *VirtualMachineListView) SpawnVirtualMachineSerialConsoleView() tview.Pr
 
 func (v *VirtualMachineListView) SpawnVirtualMachineCommandListView() tview.Primitive {
 	vmName, _ := v.List.GetItemText(v.List.GetCurrentItem())
+	v.Parent.RemoveViews(4)
 	cmdMap, err := azcli.GetResourceCommands("vm")
 	if err != nil {
 		panic(err)
@@ -168,7 +169,7 @@ func (v *VirtualMachineListView) SpawnVirtualMachineCommandListView() tview.Prim
 			}
 
 			output := tview.NewTextView()
-			v.Parent.AppendPrimitiveView(output, false, 3)
+			v.Parent.AppendPrimitiveView(output, false, 0)
 			output.SetTitle("Command Output")
 			output.SetBorder(true)
 			output.Write([]byte(out))
