@@ -92,6 +92,7 @@ func RunAzCommand(args []string, handleErrorFunc func([]string, error) error) (s
 	if err != nil {
 		if handleErrorFunc != nil {
 			handleErrorFunc(args, fmt.Errorf("%v", stderrBuf.String()))
+			return "", err
 		}
 	}
 
