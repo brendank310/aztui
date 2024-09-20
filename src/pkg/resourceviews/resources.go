@@ -6,8 +6,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/brendank310/aztui/pkg/config"
-	"github.com/brendank310/aztui/pkg/layout"
+	"github.com/brendank310/aztui/pkg/logger"
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
@@ -15,7 +15,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 )
 
-var resourceSelectItemFuncMap = map[string]func(*ResourceListView, string) tview.Primitive{
+var resourceSelectItemFuncMap = map[string]func(*ResourceListView) tview.Primitive{
 	"SpawnResourceDetailView": (*ResourceListView).SpawnResourceDetailView,
 }
 
@@ -27,17 +27,17 @@ type ResourceListView struct {
 	ResourceGroup  string
 	ResourceType   string
 	ReadableName   string
-	Parent         *layout.AppLayout
+	Parent         *AppLayout
 }
 
-func NewResourceListView(layout *layout.AppLayout, subscriptionID, resourceGroup, resourceType string) *ResourceListView {
+func NewResourceListView(layout *AppLayout, subscriptionID, resourceGroup, resourceType string) *ResourceListView {
 	resourceList := ResourceListView{
 		List: tview.NewList(),
 	}
 
 	resourceList.ReadableName = strings.TrimPrefix(resourceType, "Microsoft.")
 
-	title := fmt.Sprintf("%v (%v)", resourceList.ReadableName, "F4")
+	title := fmt.Sprintf("%v (%v)", resourceList.ReadableName, "F5")
 
 	resourceList.List.SetBorder(true)
 	resourceList.List.Box.SetTitle(title)
@@ -49,33 +49,38 @@ func NewResourceListView(layout *layout.AppLayout, subscriptionID, resourceGroup
 	resourceList.Parent = layout
 	layout.FocusedViewIndex = 3
 
+	InitViewKeyBindings(&resourceList)
+
+	resourceList.Update()
+
 	return &resourceList
 }
 
-func callResourceMethodByName(view *ResourceListView, methodName, resourceName string) tview.Primitive {
-	if method, exists := resourceSelectItemFuncMap[methodName]; exists {
-		return method(view, resourceName)
-	} else {
-		fmt.Printf("Method %s not found\n", methodName)
-	}
+func (v *ResourceListView) Name() string {
+	return "ResourceListView"
+}
 
+func (v *ResourceListView) SetInputCapture(f func(event *tcell.EventKey) *tcell.EventKey) {
+	v.List.SetInputCapture(f)
+}
+
+func (v *ResourceListView) CustomInputHandler() func(event *tcell.EventKey) *tcell.EventKey {
 	return nil
 }
 
-func (v *ResourceListView) SelectItem(resourceName string) {
-	symbolName := GetSymbolName()
-	typeName := ExtractTypeName(symbolName)
-	fnName := GetFunctionName(symbolName)
-
-	for _, action := range config.GConfig.Actions {
-		if typeName == action.Type && fnName == action.Condition {
-			p := callResourceMethodByName(v, action.Action, resourceName)
-			v.Parent.AppendPrimitiveView(p, action.TakeFocus, 3)
-		}
+func (v *ResourceListView) CallAction(action string) (tview.Primitive, error) {
+	if actionFunc, ok := resourceSelectItemFuncMap[action]; ok {
+		return actionFunc(v), nil
 	}
+	return nil, fmt.Errorf("no action for %s", action)
 }
 
-func (v *ResourceListView) SpawnResourceDetailView(resourceName string) tview.Primitive {
+func (v *ResourceListView) AppendPrimitiveView(p tview.Primitive, takeFocus bool, width int) {
+	v.Parent.AppendPrimitiveView(p, takeFocus, width)
+}
+
+func (v *ResourceListView) SpawnResourceDetailView() tview.Primitive {
+	resourceName, _ := v.List.GetItemText(v.List.GetCurrentItem())
 	// Remove previous views if exist strating from the one at index 4
 	v.Parent.RemoveViews(4)
 
@@ -139,7 +144,7 @@ func (v *ResourceListView) Update() error {
 
 	resourcesClient, err := armresources.NewClient(v.SubscriptionID, cred, nil)
 	if err != nil {
-		log.Fatalf("failed to create resources client: %v", err)
+		logger.Println("failed to create resources client: ", err)
 	}
 
 	filter := fmt.Sprintf("resourceType eq '%s'", v.ResourceType)
@@ -158,13 +163,11 @@ func (v *ResourceListView) Update() error {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			log.Fatalf("failed to get the next page of %v: %v", v.ResourceType, err)
+			logger.Println("failed to get the next page of", v.ResourceType, ":", err)
 		}
 
 		for _, resource := range page.Value {
-			v.List.AddItem(*resource.Name, *resource.Location, 0, func() {
-				v.SelectItem(*resource.Name)
-			})
+			v.List.AddItem(*resource.Name, *resource.Location, 0, nil)
 		}
 	}
 

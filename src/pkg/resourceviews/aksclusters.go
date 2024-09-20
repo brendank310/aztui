@@ -5,15 +5,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/brendank310/aztui/pkg/config"
-	"github.com/brendank310/aztui/pkg/layout"
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice"
 )
 
-var aksClusterSelectItemFuncMap = map[string]func(*AKSClusterListView, string) tview.Primitive{
+var aksClusterSelectItemFuncMap = map[string]func(*AKSClusterListView) tview.Primitive{
 	"SpawnAKSClusterDetailView": (*AKSClusterListView).SpawnAKSClusterDetailView,
 }
 
@@ -23,10 +22,10 @@ type AKSClusterListView struct {
 	ActionBarText  string
 	SubscriptionID string
 	ResourceGroup  string
-	Parent         *layout.AppLayout
+	Parent         *AppLayout
 }
 
-func NewAKSClusterListView(layout *layout.AppLayout, subscriptionID string, resourceGroup string) *AKSClusterListView {
+func NewAKSClusterListView(appLayout *AppLayout, subscriptionID string, resourceGroup string) *AKSClusterListView {
 	aks := AKSClusterListView{
 		List: tview.NewList(),
 	}
@@ -39,35 +38,40 @@ func NewAKSClusterListView(layout *layout.AppLayout, subscriptionID string, reso
 	aks.ActionBarText = "## Subscription List(F1) ## | ## Resource Group List(F2) ## | ## Run Command(F5) ## | ## Exit(F12) ##"
 	aks.SubscriptionID = subscriptionID
 	aks.ResourceGroup = resourceGroup
-	aks.Parent = layout
+	aks.Parent = appLayout
+
+	InitViewKeyBindings(&aks)
+
+	aks.Update()
 
 	return &aks
 }
 
-func callAKSClusterMethodByName(view *AKSClusterListView, methodName string, aksName string) tview.Primitive {
-	if method, exists := aksClusterSelectItemFuncMap[methodName]; exists {
-		return method(view, aksName)
-	} else {
-		fmt.Printf("Method %s not found\n", methodName)
-	}
+func (v *AKSClusterListView) Name() string {
+	return "AKSClusterListView"
+}
 
+func (v *AKSClusterListView) SetInputCapture(f func(event *tcell.EventKey) *tcell.EventKey) {
+	v.List.SetInputCapture(f)
+}
+
+func (v *AKSClusterListView) CustomInputHandler() func(event *tcell.EventKey) *tcell.EventKey {
 	return nil
 }
 
-func (v *AKSClusterListView) SelectItem(aksClusterName string) {
-	symbolName := GetSymbolName()
-	typeName := ExtractTypeName(symbolName)
-	fnName := GetFunctionName(symbolName)
-
-	for _, action := range config.GConfig.Actions {
-		if typeName == action.Type && fnName == action.Condition {
-			p := callAKSClusterMethodByName(v, action.Action, aksClusterName)
-			v.Parent.AppendPrimitiveView(p, action.TakeFocus, 3)
-		}
+func (v *AKSClusterListView) CallAction(action string) (tview.Primitive, error) {
+	if actionFunc, ok := aksClusterSelectItemFuncMap[action]; ok {
+		return actionFunc(v), nil
 	}
+	return nil, fmt.Errorf("no action for %s", action)
 }
 
-func (v *AKSClusterListView) SpawnAKSClusterDetailView(aksClusterName string) tview.Primitive {
+func (v *AKSClusterListView) AppendPrimitiveView(p tview.Primitive, takeFocus bool, width int) {
+	v.Parent.AppendPrimitiveView(p, takeFocus, width)
+}
+
+func (v *AKSClusterListView) SpawnAKSClusterDetailView() tview.Primitive {
+	aksClusterName, _ := v.List.GetItemText(v.List.GetCurrentItem())
 	t := tview.NewForm()
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
@@ -130,9 +134,7 @@ func (v *AKSClusterListView) Update() error {
 
 		// Loop through the AKS clusters and print their details
 		for _, cluster := range page.Value {
-			v.List.AddItem(*cluster.Name, *cluster.Properties.KubernetesVersion, 0, func() {
-				v.SelectItem(*cluster.Name)
-			})
+			v.List.AddItem(*cluster.Name, *cluster.Properties.KubernetesVersion, 0, nil)
 		}
 	}
 

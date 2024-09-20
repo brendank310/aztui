@@ -7,16 +7,15 @@ import (
 	"strings"
 
 	"github.com/brendank310/aztui/pkg/azcli"
-	"github.com/brendank310/aztui/pkg/config"
 	"github.com/brendank310/aztui/pkg/consoles"
-	"github.com/brendank310/aztui/pkg/layout"
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 )
 
-var virtualMachineSelectItemFuncMap = map[string]func(*VirtualMachineListView, string) tview.Primitive{
+var virtualMachineSelectItemFuncMap = map[string]func(*VirtualMachineListView) tview.Primitive{
 	"SpawnVirtualMachineDetailView":        (*VirtualMachineListView).SpawnVirtualMachineDetailView,
 	"SpawnVirtualMachineSerialConsoleView": (*VirtualMachineListView).SpawnVirtualMachineSerialConsoleView,
 	"SpawnVirtualMachineCommandListView":   (*VirtualMachineListView).SpawnVirtualMachineCommandListView,
@@ -28,15 +27,15 @@ type VirtualMachineListView struct {
 	ActionBarText  string
 	SubscriptionID string
 	ResourceGroup  string
-	Parent         *layout.AppLayout
+	Parent         *AppLayout
 }
 
-func NewVirtualMachineListView(layout *layout.AppLayout, subscriptionID string, resourceGroup string) *VirtualMachineListView {
+func NewVirtualMachineListView(appLayout *AppLayout, subscriptionID string, resourceGroup string) *VirtualMachineListView {
 	vm := VirtualMachineListView{
 		List: tview.NewList(),
 	}
 
-	title := fmt.Sprintf("Virtual Machines (%v)", "F3")
+	title := fmt.Sprintf("Virtual Machines (%v)", "F4")
 
 	vm.List.SetBorder(true)
 	vm.List.Box.SetTitle(title)
@@ -44,38 +43,41 @@ func NewVirtualMachineListView(layout *layout.AppLayout, subscriptionID string, 
 	vm.ActionBarText = "## Subscription List(F1) ## | ## Resource Group List(F2) ## | ## Run Command(F5) ## | ## Serial Console (F7) ## | ## Exit(F12) ##"
 	vm.SubscriptionID = subscriptionID
 	vm.ResourceGroup = resourceGroup
-	vm.Parent = layout
+	vm.Parent = appLayout
+
+	InitViewKeyBindings(&vm)
+
+	vm.Update()
 
 	return &vm
 }
 
-func callVirtualMachineMethodByName(view *VirtualMachineListView, methodName string, vmName string) tview.Primitive {
-	if method, exists := virtualMachineSelectItemFuncMap[methodName]; exists {
-		return method(view, vmName)
-	} else {
-		fmt.Printf("Method %s not found\n", methodName)
-	}
+func (v *VirtualMachineListView) Name() string {
+	return "VirtualMachineListView"
+}
 
+func (v *VirtualMachineListView) SetInputCapture(f func(event *tcell.EventKey) *tcell.EventKey) {
+	v.List.SetInputCapture(f)
+}
+
+func (v *VirtualMachineListView) CustomInputHandler() func(event *tcell.EventKey) *tcell.EventKey {
 	return nil
 }
 
-func (v *VirtualMachineListView) SelectItem(vmName string) {
-	symbolName := GetSymbolName()
-	typeName := ExtractTypeName(symbolName)
-	fnName := GetFunctionName(symbolName)
-
-	for _, action := range config.GConfig.Actions {
-		if typeName == action.Type && fnName == action.Condition {
-			p := callVirtualMachineMethodByName(v, action.Action, vmName)
-			v.Parent.AppendPrimitiveView(p, action.TakeFocus, 3)
-		}
+func (v *VirtualMachineListView) CallAction(action string) (tview.Primitive, error) {
+	if actionFunc, ok := virtualMachineSelectItemFuncMap[action]; ok {
+		return actionFunc(v), nil
 	}
+	return nil, fmt.Errorf("no action for %s", action)
 }
 
-func (v *VirtualMachineListView) SpawnVirtualMachineDetailView(vmName string) tview.Primitive {
-	// Remove previous views if exist strating from the one at index 1
-	v.Parent.RemoveViews(4)
+func (v *VirtualMachineListView) AppendPrimitiveView(p tview.Primitive, takeFocus bool, width int) {
+	v.Parent.AppendPrimitiveView(p, takeFocus, width)
+}
 
+func (v *VirtualMachineListView) SpawnVirtualMachineDetailView() tview.Primitive {
+	vmName, _ := v.List.GetItemText(v.List.GetCurrentItem())
+	v.Parent.RemoveViews(4)
 	t := tview.NewForm()
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
@@ -106,7 +108,8 @@ func (v *VirtualMachineListView) SpawnVirtualMachineDetailView(vmName string) tv
 	return t
 }
 
-func (v *VirtualMachineListView) SpawnVirtualMachineSerialConsoleView(vmName string) tview.Primitive {
+func (v *VirtualMachineListView) SpawnVirtualMachineSerialConsoleView() tview.Primitive {
+	vmName, _ := v.List.GetItemText(v.List.GetCurrentItem())
 	t := consoles.StartSerialConsoleMonitor(v.SubscriptionID, v.ResourceGroup, vmName)
 	t.SetChangedFunc(func() {
 		v.Parent.App.Draw()
@@ -115,7 +118,8 @@ func (v *VirtualMachineListView) SpawnVirtualMachineSerialConsoleView(vmName str
 	return t
 }
 
-func (v *VirtualMachineListView) SpawnVirtualMachineCommandListView(vmName string) tview.Primitive {
+func (v *VirtualMachineListView) SpawnVirtualMachineCommandListView() tview.Primitive {
+	vmName, _ := v.List.GetItemText(v.List.GetCurrentItem())
 	cmdMap, err := azcli.GetResourceCommands("vm")
 	if err != nil {
 		panic(err)
@@ -201,9 +205,7 @@ func (v *VirtualMachineListView) Update() error {
 		for _, vm := range page.Value {
 			vmName := *vm.Name
 			vmLocation := *vm.Location
-			v.List.AddItem(vmName, vmLocation, 0, func() {
-				v.SelectItem(vmName)
-			})
+			v.List.AddItem(vmName, vmLocation, 0, nil)
 		}
 	}
 

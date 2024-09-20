@@ -8,30 +8,17 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
-	"github.com/brendank310/aztui/pkg/config"
-	"github.com/brendank310/aztui/pkg/layout"
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
-var resourceTypeSelectItemFuncMap = map[string]func(*ResourceTypeListView, string) tview.Primitive{
+var resourceTypeSelectItemFuncMap = map[string]func(*ResourceTypeListView) tview.Primitive{
 	"SpawnResourceListView": (*ResourceTypeListView).SpawnResourceListView,
-}
-
-func callResourceTypeMethodByName(view *ResourceTypeListView, methodName string, resourceType string) tview.Primitive {
-	// Check if the method exists in the map and call it with the receiver
-	if method, exists := resourceTypeSelectItemFuncMap[methodName]; exists {
-		return method(view, resourceType) // Call the method with the receiver
-	} else {
-		fmt.Printf("Method %s not found\n", methodName)
-	}
-
-	return nil
 }
 
 type ResourceTypeInfo struct {
 	Name         string
 	ReadableName string
-	SelectedFunc func()
 }
 
 type ResourceTypeListView struct {
@@ -40,11 +27,11 @@ type ResourceTypeListView struct {
 	ActionBarText    string
 	SubscriptionID   string
 	ResourceGroup    string
-	Parent           *layout.AppLayout
+	Parent           *AppLayout
 	ResourceTypeList map[string]ResourceTypeInfo
 }
 
-func NewResourceTypeListView(layout *layout.AppLayout, subscriptionID, resourceGroup string) *ResourceTypeListView {
+func NewResourceTypeListView(layout *AppLayout, subscriptionID, resourceGroup string) *ResourceTypeListView {
 	rt := ResourceTypeListView{
 		List: tview.NewList(),
 	}
@@ -60,30 +47,57 @@ func NewResourceTypeListView(layout *layout.AppLayout, subscriptionID, resourceG
 	rt.Parent = layout
 	layout.FocusedViewIndex = 2
 
+	InitViewKeyBindings(&rt)
+
+	rt.Update()
+
 	return &rt
 }
 
-func (r *ResourceTypeListView) SpawnResourceListView(resourceType string) tview.Primitive {
-	// Remove previous views if exist strating from the one at index 1
-	r.Parent.RemoveViews(3)
-
-	resourceList := NewResourceListView(r.Parent, r.SubscriptionID, r.ResourceGroup, resourceType)
-	resourceList.Update()
-
-	return resourceList.List
+func (r *ResourceTypeListView) Name() string {
+	return "ResourceTypeListView"
 }
 
-func (r *ResourceTypeListView) SelectItem(resourceType string) {
-	symbolName := GetSymbolName()
-	typeName := ExtractTypeName(symbolName)
-	fnName := GetFunctionName(symbolName)
+func (r *ResourceTypeListView) SetInputCapture(f func(event *tcell.EventKey) *tcell.EventKey) {
+	r.List.SetInputCapture(f)
+}
 
-	for _, action := range config.GConfig.Actions {
-		if typeName == action.Type && fnName == action.Condition {
-			p := callResourceTypeMethodByName(r, action.Action, resourceType)
-			r.Parent.AppendPrimitiveView(p, action.TakeFocus, 1)
-		}
+func (r *ResourceTypeListView) CustomInputHandler() func(event *tcell.EventKey) *tcell.EventKey {
+	return nil
+}
+
+func (r *ResourceTypeListView) CallAction(action string) (tview.Primitive, error) {
+	if actionFunc, ok := resourceTypeSelectItemFuncMap[action]; ok {
+		return actionFunc(r), nil
 	}
+	return nil, fmt.Errorf("no action for %s", action)
+}
+
+func (r *ResourceTypeListView) AppendPrimitiveView(p tview.Primitive, takeFocus bool, width int) {
+	r.Parent.AppendPrimitiveView(p, takeFocus, width)
+}
+
+func (r *ResourceTypeListView) SpawnResourceListView() tview.Primitive {
+	readableName, _ := r.List.GetItemText(r.List.GetCurrentItem())
+	resourceType := r.ResourceTypeList[readableName].Name
+	// Remove previous views if exist strating from the one at index 3
+	r.Parent.RemoveViews(3)
+
+	if resourceType == "Microsoft.ContainerService/managedClusters" {
+		// Spawn AKS Cluster List View
+		aksClusterList := NewAKSClusterListView(r.Parent, r.SubscriptionID, r.ResourceGroup)
+
+		return aksClusterList.List
+	}
+	if resourceType == "Microsoft.Compute/virtualMachines" {
+		// Spawn Virtual Machine List View
+		vmList := NewVirtualMachineListView(r.Parent, r.SubscriptionID, r.ResourceGroup)
+
+		return vmList.List
+	}
+	resourceList := NewResourceListView(r.Parent, r.SubscriptionID, r.ResourceGroup, resourceType)
+
+	return resourceList.List
 }
 
 func (r *ResourceTypeListView) Update() error {
@@ -120,16 +134,13 @@ func (r *ResourceTypeListView) Update() error {
 				resourceType := *resource.Type
 				name := resourceType
 				readableName := strings.TrimPrefix(resourceType, "Microsoft.")
-				selectedFunc := func() {
-					r.SelectItem(name)
-				}
-				(r.ResourceTypeList)[name] = ResourceTypeInfo{name, readableName, selectedFunc}
+				(r.ResourceTypeList)[readableName] = ResourceTypeInfo{name, readableName}
 			}
 		}
 	}
 
 	for _, resourceTypeInfo := range r.ResourceTypeList {
-		r.List.AddItem(resourceTypeInfo.ReadableName, "", 0, resourceTypeInfo.SelectedFunc)
+		r.List.AddItem(resourceTypeInfo.ReadableName, "", 0, nil)
 	}
 
 	return nil

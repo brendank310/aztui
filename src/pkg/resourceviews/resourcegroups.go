@@ -5,45 +5,34 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/brendank310/aztui/pkg/config"
-	"github.com/brendank310/aztui/pkg/layout"
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 )
 
-var resourceGroupSelectItemFuncMap = map[string]func(*ResourceGroupListView, string) tview.Primitive{
-	"SpawnResourceTypeListView": (*ResourceGroupListView).SpawnResourceTypeListView,
-}
-
-func callResourceGroupMethodByName(view *ResourceGroupListView, methodName string, resourceGroup string) tview.Primitive {
-	// Check if the method exists in the map and call it with the receiver
-	if method, exists := resourceGroupSelectItemFuncMap[methodName]; exists {
-		return method(view, resourceGroup) // Call the method with the receiver
-	} else {
-		fmt.Printf("Method %s not found\n", methodName)
-	}
-
-	return nil
+var resourceGroupSelectItemFuncMap = map[string]func(*ResourceGroupListView) tview.Primitive{
+	"SpawnResourceTypeListView":   (*ResourceGroupListView).SpawnResourceTypeListView,
+	"SpawnVirtualMachineListView": (*ResourceGroupListView).SpawnVirtualMachineListView,
+	"SpawnAKSClusterListView":     (*ResourceGroupListView).SpawnAKSClusterListView,
 }
 
 type ResourceGroupInfo struct {
-	ResourceGroupName string
+	ResourceGroupName     string
 	ResourceGroupLocation string
-	SelectedFunc    func()
 }
 
 type ResourceGroupListView struct {
-	List           		*tview.List
-	StatusBarText  		string
-	ActionBarText  		string
-	SubscriptionID	 	string
-	Parent         		*layout.AppLayout
-	ResourceGroupList 	*[]ResourceGroupInfo
+	List              *tview.List
+	StatusBarText     string
+	ActionBarText     string
+	SubscriptionID    string
+	Parent            *AppLayout
+	ResourceGroupList *[]ResourceGroupInfo
 }
 
-func NewResourceGroupListView(layout *layout.AppLayout, subscriptionID string) *ResourceGroupListView {
+func NewResourceGroupListView(appLayout *AppLayout, subscriptionID string) *ResourceGroupListView {
 	rg := ResourceGroupListView{
 		List: tview.NewList(),
 	}
@@ -55,33 +44,61 @@ func NewResourceGroupListView(layout *layout.AppLayout, subscriptionID string) *
 	rg.List.ShowSecondaryText(true)
 	rg.ActionBarText = "## Select(Enter) ## | ## Exit(F12) ##"
 	rg.SubscriptionID = subscriptionID
-	rg.Parent = layout
-	layout.FocusedViewIndex = 1
+	rg.Parent = appLayout
+
+	InitViewKeyBindings(&rg)
+	appLayout.FocusedViewIndex = 1
+
+	rg.Update()
 
 	return &rg
 }
 
-func (r *ResourceGroupListView) SpawnResourceTypeListView(resourceGroup string) tview.Primitive {
-	// Remove previous views if exist strating from the one at index 2
+func (r *ResourceGroupListView) Name() string {
+	return "ResourceGroupListView"
+}
+
+func (r *ResourceGroupListView) SetInputCapture(f func(event *tcell.EventKey) *tcell.EventKey) {
+	r.List.SetInputCapture(f)
+}
+
+func (r *ResourceGroupListView) CustomInputHandler() func(event *tcell.EventKey) *tcell.EventKey {
+	return nil
+}
+
+func (r *ResourceGroupListView) CallAction(action string) (tview.Primitive, error) {
+	if actionFunc, ok := resourceGroupSelectItemFuncMap[action]; ok {
+		return actionFunc(r), nil
+	}
+	return nil, fmt.Errorf("no action for %s", action)
+}
+
+func (r *ResourceGroupListView) AppendPrimitiveView(p tview.Primitive, takeFocus bool, width int) {
+	r.Parent.AppendPrimitiveView(p, takeFocus, width)
+}
+
+func (r *ResourceGroupListView) SpawnResourceTypeListView() tview.Primitive {
+	resourceGroup, _ := r.List.GetItemText(r.List.GetCurrentItem())
+	// Remove previous views if exist starting from the one at index 2
 	r.Parent.RemoveViews(2)
-
 	rtList := NewResourceTypeListView(r.Parent, r.SubscriptionID, resourceGroup)
-	rtList.Update()
-
 	return rtList.List
 }
 
-func (r *ResourceGroupListView) SelectItem(resourceGroup string) {
-	symbolName := GetSymbolName()
-	typeName := ExtractTypeName(symbolName)
-	fnName := GetFunctionName(symbolName)
+func (r *ResourceGroupListView) SpawnVirtualMachineListView() tview.Primitive {
+	resourceGroup, _ := r.List.GetItemText(r.List.GetCurrentItem())
+	// Remove previous views if exist starting from the one at index 2
+	r.Parent.RemoveViews(2)
+	vmList := NewVirtualMachineListView(r.Parent, r.SubscriptionID, resourceGroup)
+	return vmList.List
+}
 
-	for _, action := range config.GConfig.Actions {
-		if typeName == action.Type && fnName == action.Condition {
-			p := callResourceGroupMethodByName(r, action.Action, resourceGroup)
-			r.Parent.AppendPrimitiveView(p, action.TakeFocus, 1)
-		}
-	}
+func (r *ResourceGroupListView) SpawnAKSClusterListView() tview.Primitive {
+	resourceGroup, _ := r.List.GetItemText(r.List.GetCurrentItem())
+	// Remove previous views if exist starting from the one at index 2
+	r.Parent.RemoveViews(2)
+	aksList := NewAKSClusterListView(r.Parent, r.SubscriptionID, resourceGroup)
+	return aksList.List
 }
 
 func (r *ResourceGroupListView) Update() error {
@@ -108,25 +125,22 @@ func (r *ResourceGroupListView) Update() error {
 		for _, rg := range page.Value {
 			resourceGroup := *rg.Name
 			location := *rg.Location
-			selectedFunc := func() {
-				r.SelectItem(resourceGroup)
-			}
-			*r.ResourceGroupList = append(*r.ResourceGroupList, ResourceGroupInfo{resourceGroup, location, selectedFunc})
-			r.List.AddItem(resourceGroup, location, 0, selectedFunc)
+			*r.ResourceGroupList = append(*r.ResourceGroupList, ResourceGroupInfo{resourceGroup, location})
+			r.List.AddItem(resourceGroup, location, 0, nil)
 		}
 	}
 
 	return nil
 }
 
-func (r *ResourceGroupListView) UpdateList(layout *layout.AppLayout) error {
+func (r *ResourceGroupListView) UpdateList(layout *AppLayout) error {
 	r.List.Clear()
 	// Make filtering case insensitive
 	filter := strings.ToLower(layout.InputField.GetText())
 	for _, ResourceGroupInfo := range *r.ResourceGroupList {
 		lowerCaseResourceGroupName := strings.ToLower(ResourceGroupInfo.ResourceGroupName)
 		if strings.Contains(lowerCaseResourceGroupName, filter) {
-			r.List.AddItem(ResourceGroupInfo.ResourceGroupName, ResourceGroupInfo.ResourceGroupLocation, 0, ResourceGroupInfo.SelectedFunc)
+			r.List.AddItem(ResourceGroupInfo.ResourceGroupName, ResourceGroupInfo.ResourceGroupLocation, 0, nil)
 		}
 	}
 	return nil

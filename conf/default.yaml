@@ -1,32 +1,69 @@
-actions:
-  - type: "SubscriptionListView"
-    condition: "SelectItem"
-    action: "SpawnResourceGroupListView"
-    takeFocus: true
-  - type: "ResourceGroupListView"
-    condition: "SelectItem"
-    action: "SpawnResourceTypeListView"
-    takeFocus: true
-  - type: "ResourceTypeListView"
-    condition: "SelectItem"
-    action: "SpawnResourceListView"
-    takeFocus: true
-  - type: "ResourceListView"
-    condition: "SelectItem"
-    action: "SpawnResourceDetailView"
-    takeFocus: true
-  - type: "Global"
-    condition: "Quit"
-    action: "Quit"
-    takeFocus: true
-key_mappings:
-  - action: "SpawnResourceGroupListView"
-    key: "Enter"
-  - action: "SpawnResourceTypeListView"
-    key: "Enter"
-  - action: "SpawnResourceListView"
-    key: "Enter"
-  - action: "SpawnResourceDetailView"
-    key: "Enter"
-  - action: "Quit"
-    key: "F12"
+views:
+  - view: "SubscriptionListView"
+    actions:
+      - action: "SpawnResourceGroupListView"
+        takeFocus: true
+        key: "Enter"
+        width: 1
+  - view: "ResourceGroupListView"
+    actions:
+      - action: "SpawnResourceTypeListView"
+        takeFocus: true
+        key: "Enter"
+        width: 1
+      - action: "SpawnVirtualMachineListView"
+        takeFocus: true
+        key: "v"
+        width: 1
+      - action: "SpawnAKSClusterListView"
+        takeFocus: true
+        key: "a"
+        width: 1
+  - view: "VirtualMachineListView"
+    actions:
+      - action: "SpawnVirtualMachineDetailView"
+        takeFocus: false
+        key: "Enter"
+        width: 3
+      - action: "SpawnVirtualMachineCommandListView"
+        takeFocus: true
+        key: "c"
+        width: 3
+      - action: "SpawnVirtualMachineSerialConsoleView"
+        takeFocus: true
+        key: "s"
+        width: 3
+  - view: "AKSClusterListView"
+    actions:
+      - action: "SpawnAKSClusterDetailView"
+        takeFocus: false
+        key: "Enter"
+        width: 3
+  - view: "ResourceListView"
+    actions:
+      - action: "SpawnResourceDetailView"
+        takeFocus: false
+        key: "Enter"
+        width: 3
+  - view: "ResourceTypeListView"
+    actions:
+      - action: "SpawnResourceListView"
+        takeFocus: true
+        key: "Enter"
+        width: 1
+  - view: "AppLayout"
+    actions:
+      - action: "Quit"
+        key: "F12"
+      - action: "FocusView0"
+        key: "F1"
+      - action: "FocusView1"
+        key: "F2"
+      - action: "FocusView2"
+        key: "F3"
+      - action: "FocusView3"
+        key: "F4"
+      - action: "FocusView4"
+        key: "F5"
+      - action: "FocusInputField"
+        key: "F10"

@@ -8,7 +8,6 @@ import (
 
 	_ "github.com/brendank310/aztui/pkg/azcli"
 	"github.com/brendank310/aztui/pkg/config"
-	"github.com/brendank310/aztui/pkg/layout"
 	"github.com/brendank310/aztui/pkg/logger"
 	"github.com/brendank310/aztui/pkg/resourceviews"
 
@@ -18,7 +17,7 @@ import (
 
 type AzTuiState struct {
 	// Basic TUI variables
-	*layout.AppLayout
+	*resourceviews.AppLayout
 	config.Config
 }
 
@@ -27,9 +26,6 @@ func NewAzTuiState() *AzTuiState {
 	err := logger.InitLogger()
 	if err != nil {
 		panic(err)
-	}
-	a := AzTuiState{
-		AppLayout: layout.NewAppLayout(),
 	}
 
 	configPath := os.Getenv("AZTUI_CONFIG_PATH")
@@ -42,7 +38,10 @@ func NewAzTuiState() *AzTuiState {
 		panic(err)
 	}
 
-	a.Config = c
+	a := AzTuiState{
+		AppLayout: resourceviews.NewAppLayout(),
+		Config:    c,
+	}
 
 	subscriptionList := resourceviews.NewSubscriptionListView(a.AppLayout)
 	if subscriptionList == nil {
