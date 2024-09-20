@@ -35,7 +35,7 @@ func NewVirtualMachineListView(appLayout *AppLayout, subscriptionID string, reso
 		List: tview.NewList(),
 	}
 
-	title := fmt.Sprintf("Virtual Machines (%v)", "F3")
+	title := fmt.Sprintf("Virtual Machines (%v)", "F4")
 
 	vm.List.SetBorder(true)
 	vm.List.Box.SetTitle(title)

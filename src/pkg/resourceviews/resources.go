@@ -37,7 +37,7 @@ func NewResourceListView(layout *AppLayout, subscriptionID, resourceGroup, resou
 
 	resourceList.ReadableName = strings.TrimPrefix(resourceType, "Microsoft.")
 
-	title := fmt.Sprintf("%v (%v)", resourceList.ReadableName, "F4")
+	title := fmt.Sprintf("%v (%v)", resourceList.ReadableName, "F5")
 
 	resourceList.List.SetBorder(true)
 	resourceList.List.Box.SetTitle(title)
