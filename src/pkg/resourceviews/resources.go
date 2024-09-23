@@ -81,7 +81,7 @@ func (v *ResourceListView) AppendPrimitiveView(p tview.Primitive, takeFocus bool
 
 func (v *ResourceListView) SpawnResourceDetailView() tview.Primitive {
 	resourceName, _ := v.List.GetItemText(v.List.GetCurrentItem())
-	// Remove previous views if exist strating from the one at index 4
+	// Remove previous views if exist starting from the one at index 4
 	v.Parent.RemoveViews(4)
 
 	t := tview.NewForm()

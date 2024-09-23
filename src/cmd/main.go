@@ -56,7 +56,6 @@ func NewAzTuiState() *AzTuiState {
 			subscriptionList.ResourceGroupListView.UpdateList(a.AppLayout)
 			a.App.SetFocus(subscriptionList.ResourceGroupListView.List)
 		}
-		
 	})
 
 	return &a
