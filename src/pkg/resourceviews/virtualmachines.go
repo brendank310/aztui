@@ -164,8 +164,12 @@ func (v *VirtualMachineListView) SpawnVirtualMachineCommandListView() tview.Prim
 
 				return nil
 			})
+
 			if err != nil {
-				panic(err)
+				out = fmt.Sprintf("Command execution failed with error: %v\n", err)
+			}
+			if out == "" {
+				out = "Command executed successfully"
 			}
 
 			output := tview.NewTextView()
