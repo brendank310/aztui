@@ -26,7 +26,9 @@ clean:
 	rm -rf $(DESTDIR)
 
 run:
-	go run cmd/main.go
+	cd $(SRC_DIR) && \
+	AZTUI_CONFIG_PATH=$(PWD)/conf/default.yaml go run cmd/main.go && \
+	cd ..
 
 all: $(DESTDIR)/$(BINARY_NAME)
 
@@ -80,3 +82,6 @@ prepare_rpm_structure: tarball
 	@echo "%changelog" >> $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "* $(shell date +"%a %b %d %Y") Brendan Kerrigan <bkerrig1@binghamton.edu> - $(VERSION)-$(RELEASE)" >> $(SPECDIR)/$(BINARY_NAME).spec
 	@echo "- Initial package" >> $(SPECDIR)/$(BINARY_NAME).spec
+
+format:
+	gofmt -s -w ./src/

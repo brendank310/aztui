@@ -3,20 +3,34 @@ package resourceviews
 import (
 	"context"
 	"fmt"
+	"strings"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
 )
 
-type SubscriptionListView struct {
-	List *tview.List
-	StatusBarText string
-	ActionBarText string
+var subscriptionSelectItemFuncMap = map[string]func(*SubscriptionListView) tview.Primitive{
+	"SpawnResourceGroupListView": (*SubscriptionListView).SpawnResourceGroupListView,
 }
 
-func NewSubscriptionListView() *SubscriptionListView {
+type SubscriptionInfo struct {
+	SubscriptionName string
+	SubscriptionID   string
+}
+
+type SubscriptionListView struct {
+	List                  *tview.List
+	StatusBarText         string
+	ActionBarText         string
+	Parent                *AppLayout
+	SubscriptionList      *[]SubscriptionInfo
+	ResourceGroupListView *ResourceGroupListView
+}
+
+func NewSubscriptionListView(appLayout *AppLayout) *SubscriptionListView {
 	s := SubscriptionListView{
 		List: tview.NewList(),
 	}
@@ -26,15 +40,47 @@ func NewSubscriptionListView() *SubscriptionListView {
 	s.List.SetBorder(true)
 	s.List.Box.SetTitle(title)
 	s.ActionBarText = "## Select(Enter) ## | ## Exit(F12) ##"
+	s.Parent = appLayout
 
+	InitViewKeyBindings(&s)
+
+	s.Update()
+	appLayout.AppendPrimitiveView(s.List, true, 1)
 	return &s
 }
 
-func (s *SubscriptionListView) SpawnResourceGroupListView(subscriptionID string) *ResourceGroupListView {
+func (s *SubscriptionListView) Name() string {
+	return "SubscriptionListView"
+}
+
+func (s *SubscriptionListView) SetInputCapture(f func(event *tcell.EventKey) *tcell.EventKey) {
+	s.List.SetInputCapture(f)
+}
+
+func (s *SubscriptionListView) CustomInputHandler() func(event *tcell.EventKey) *tcell.EventKey {
 	return nil
 }
 
-func (s *SubscriptionListView) Update(selectedFunc func()) error {
+func (s *SubscriptionListView) CallAction(action string) (tview.Primitive, error) {
+	if actionFunc, ok := subscriptionSelectItemFuncMap[action]; ok {
+		return actionFunc(s), nil
+	}
+	return nil, fmt.Errorf("no action for %s", action)
+}
+
+func (s *SubscriptionListView) AppendPrimitiveView(p tview.Primitive, takeFocus bool, width int) {
+	s.Parent.AppendPrimitiveView(p, takeFocus, width)
+}
+
+func (s *SubscriptionListView) SpawnResourceGroupListView() tview.Primitive {
+	_, subscriptionID := s.List.GetItemText(s.List.GetCurrentItem())
+	s.Parent.RemoveViews(1)
+	rgList := NewResourceGroupListView(s.Parent, subscriptionID)
+	s.ResourceGroupListView = rgList
+	return rgList.List
+}
+
+func (s *SubscriptionListView) Update() error {
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		return fmt.Errorf("failed to obtain a credential: %v", err)
@@ -45,6 +91,9 @@ func (s *SubscriptionListView) Update(selectedFunc func()) error {
 		return fmt.Errorf("failed to create subscriptions client: %v", err)
 	}
 
+	// Initialize the subscription list
+	s.SubscriptionList = &[]SubscriptionInfo{}
+
 	// List subscriptions
 	subPager := subClient.NewListPager(nil)
 	ctx := context.Background()
@@ -54,11 +103,25 @@ func (s *SubscriptionListView) Update(selectedFunc func()) error {
 			return fmt.Errorf("failed to get next subscriptions page: %v", err)
 		}
 		for _, subscription := range page.Value {
-			subID := *subscription.SubscriptionID
-			subName := *subscription.DisplayName
-			s.List.AddItem(subName, subID, 0, selectedFunc)
+			subscriptionID := *subscription.SubscriptionID
+			subscriptionName := *subscription.DisplayName
+			s.List.AddItem(subscriptionName, subscriptionID, 0, nil)
+			*s.SubscriptionList = append(*s.SubscriptionList, SubscriptionInfo{subscriptionName, subscriptionID})
 		}
 	}
 
+	return nil
+}
+
+func (s *SubscriptionListView) UpdateList(layout *AppLayout) error {
+	s.List.Clear()
+	// Make filtering case insensitive
+	filter := strings.ToLower(layout.InputField.GetText())
+	for _, SubscriptionInfo := range *s.SubscriptionList {
+		lowerCaseSubscriptionName := strings.ToLower(SubscriptionInfo.SubscriptionName)
+		if strings.Contains(lowerCaseSubscriptionName, filter) {
+			s.List.AddItem(SubscriptionInfo.SubscriptionName, SubscriptionInfo.SubscriptionID, 0, nil)
+		}
+	}
 	return nil
 }

@@ -1,4 +1,5 @@
 # AzTUI
+
 [![Go](https://github.com/brendank310/aztui/actions/workflows/go.yml/badge.svg)](https://github.com/brendank310/aztui/actions/workflows/go.yml)
 
 **aztui** is an open-source command-line tool that allows users to interact with their Azure resources using a text user interface (TUI). It provides a convenient way to manage Azure resources directly from the terminal, making it easy to monitor, manage, and perform actions on your resources without needing to use the Azure web portal.
@@ -14,14 +15,15 @@
 
 ## Instructions
 
-Install the azcli and login using `az cli`. Once logged in you can build and run aztui with:
-`make all && bin\aztui`
+Install the azcli and login using `az login`. Once logged in you can build and run aztui with:
+`make all && AZTUI_CONFIG_PATH=conf/default.yaml bin/aztui`
 
 ## Demo
 
 ![Demonstration](demo.gif)
 
 ## Plan for feature development
+
 Mostly the feature development will be determined by how convenient the feature may be to my day to day use of Azure, though if there are features that enough people upvote as an issue I'll try to prioritize it.
 
 ## Notice

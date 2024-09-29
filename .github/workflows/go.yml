@@ -3,9 +3,9 @@
 name: Go
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "hackathon2024" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "hackathon2024" ]
 jobs:
   build:
     runs-on: ubuntu-latest
