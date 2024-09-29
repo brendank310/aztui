@@ -20,8 +20,6 @@ func main() {
 		strings.TrimSpace(subscriptionID),
 		"--resource-group",
 		resourceGroup,
-		//"--name",
-		//strings.TrimSpace(vmName),
 	}
 	rc, err := azcli.GetResourceCommands(args[0])
 	if err != nil {
