@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/brendank310/aztui/pkg/config"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
@@ -36,22 +37,40 @@ func NewResourceGroupListView(appLayout *AppLayout, subscriptionID string) *Reso
 	rg := ResourceGroupListView{
 		List: tview.NewList(),
 	}
-
-	title := fmt.Sprintf("Resource Groups (%v)", "F2")
+	appLayout.FocusedViewIndex = 1
+	title := fmt.Sprintf("Resource Groups (F%v)", appLayout.FocusedViewIndex+1)
 
 	rg.List.SetBorder(true)
 	rg.List.Box.SetTitle(title)
 	rg.List.ShowSecondaryText(true)
-	rg.ActionBarText = "## Select(Enter) ## | ## Exit(F12) ##"
+	rg.ActionBarText = ""
 	rg.SubscriptionID = subscriptionID
 	rg.Parent = appLayout
 
-	InitViewKeyBindings(&rg)
-	appLayout.FocusedViewIndex = 1
-
-	rg.Update()
+	rg.List.SetFocusFunc(func() {
+		InitViewKeyBindings(&rg)
+		rg.Update()
+		rg.UpdateList(rg.Parent)
+		rg.Parent.InputField.SetText("")
+		rg.UpdateActionBar(rg.Parent.ActionBar)
+	})
 
 	return &rg
+}
+
+func (r *ResourceGroupListView) UpdateActionBar(t *tview.TextView) {
+	actionBarText := ""
+	for _, view := range config.GConfig.Views {
+		if view.Name == r.Name() {
+			for _, action := range view.Actions {
+				actionBarText += fmt.Sprintf("%v(%v) | ", action.Description, action.Key)
+			}
+			actionBarText = actionBarText[:len(actionBarText)-3] // Remove the last " | "
+			break
+		}
+	}
+
+	t.SetText(actionBarText)
 }
 
 func (r *ResourceGroupListView) Name() string {

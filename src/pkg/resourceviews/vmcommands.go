@@ -35,6 +35,21 @@ func NewVMCommandListView(resourceGroupName string, VM string) *VMCommandListVie
 	return &s
 }
 
+// func (a *VMCommandListView) GetActionBarText() string {
+// 	actionBarText := ""
+// 	for _, view := range config.GConfig.Views {
+// 		if view.Name == a.Name() {
+// 			for _, action := range view.Actions {
+// 				actionBarText += fmt.Sprintf("%v(%v) | ", action.Action, action.Key)
+// 			}
+// 			actionBarText = actionBarText[:len(actionBarText)-3] // Remove the last " | "
+// 			break
+// 		}
+// 	}
+
+// 	return actionBarText
+// }
+
 func (s *VMCommandListView) Update() error {
 	cmdMap, err := azcli.GetResourceCommands("vm")
 	if err != nil {

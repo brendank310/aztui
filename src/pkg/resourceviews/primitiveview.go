@@ -1,6 +1,8 @@
 package resourceviews
 
 import (
+	"strings"
+
 	"github.com/brendank310/aztui/pkg/config"
 	"github.com/brendank310/aztui/pkg/logger"
 	"github.com/gdamore/tcell/v2"
@@ -25,6 +27,9 @@ type PrimitiveView interface {
 	CallAction(action string) (tview.Primitive, error)
 
 	AppendPrimitiveView(p tview.Primitive, takeFocus bool, width int)
+
+	// SetActionBar
+	UpdateActionBar(actionBar *tview.TextView)
 }
 
 /**
@@ -48,7 +53,7 @@ func InitViewKeyBindings(view PrimitiveView) {
 	}
 
 	// find matching key_mappings
-	keyActionMap := make(map[config.UserKey]config.Action)
+	keyActionMap := make(map[string]config.Action)
 	for _, action := range actions {
 		keyActionMap[action.Key] = action
 	}
@@ -65,13 +70,12 @@ func InitViewKeyBindings(view PrimitiveView) {
 		}
 
 		// check if the key is in the keyActionMap
-		logger.Println("Key pressed", event.Key(), event.Rune())
-		Ch := rune(0)
-		if event.Key() == tcell.KeyRune {
-			Ch = event.Rune()
-		}
+		keyName := event.Name()
+		keyName = strings.TrimSuffix(strings.TrimPrefix(keyName, "Rune["), "]")
+		logger.Println("Key pressed ", keyName)
 
-		if action, exists := keyActionMap[config.UserKey{Key: event.Key(), Ch: Ch}]; exists {
+		if action, exists := keyActionMap[keyName]; exists {
+			logger.Println("Action found for key", keyName, action.Action)
 			// call the function with the action name
 			newView, err := view.CallAction(action.Action)
 			if err != nil {

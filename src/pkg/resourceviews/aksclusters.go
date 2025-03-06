@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/brendank310/aztui/pkg/config"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
@@ -30,21 +31,39 @@ func NewAKSClusterListView(appLayout *AppLayout, subscriptionID string, resource
 		List: tview.NewList(),
 	}
 
-	title := fmt.Sprintf("AKS Clusters (%v)", "F4")
+	appLayout.FocusedViewIndex = 2
+	title := fmt.Sprintf("AKS Clusters (F%v)", appLayout.FocusedViewIndex+1)
 
 	aks.List.SetBorder(true)
 	aks.List.Box.SetTitle(title)
 	aks.List.ShowSecondaryText(false)
-	aks.ActionBarText = "## Subscription List(F1) ## | ## Resource Group List(F2) ## | ## Run Command(F5) ## | ## Exit(F12) ##"
+	aks.ActionBarText = ""
 	aks.SubscriptionID = subscriptionID
 	aks.ResourceGroup = resourceGroup
 	aks.Parent = appLayout
 
-	InitViewKeyBindings(&aks)
-
-	aks.Update()
+	aks.List.SetFocusFunc(func() {
+		InitViewKeyBindings(&aks)
+		aks.Update()
+		aks.UpdateActionBar(aks.Parent.ActionBar)
+	})
 
 	return &aks
+}
+
+func (a *AKSClusterListView) UpdateActionBar(t *tview.TextView) {
+	actionBarText := ""
+	for _, view := range config.GConfig.Views {
+		if view.Name == a.Name() {
+			for _, action := range view.Actions {
+				actionBarText += fmt.Sprintf("%v(%v) | ", action.Description, action.Key)
+			}
+			actionBarText = actionBarText[:len(actionBarText)-3] // Remove the last " | "
+			break
+		}
+	}
+
+	t.SetText(actionBarText)
 }
 
 func (v *AKSClusterListView) Name() string {

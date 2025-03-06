@@ -14,6 +14,9 @@ SPECDIR ?= $(RPMBUILD_DIR)/SPECS
 SOURCEDIR ?= $(RPMBUILD_DIR)/SOURCES
 BUILDDIR ?= $(RPMBUILD_DIR)/BUILD
 
+# Runtime
+AZTUI_CONFIG_PATH ?= $(PWD)/conf/default.yaml
+
 $(DESTDIR):
 	mkdir -p $(DESTDIR)
 
@@ -27,7 +30,7 @@ clean:
 
 run:
 	cd $(SRC_DIR) && \
-	AZTUI_CONFIG_PATH=$(PWD)/conf/default.yaml go run cmd/main.go && \
+	AZTUI_CONFIG_PATH=$(AZTUI_CONFIG_PATH) go run cmd/main.go && \
 	cd ..
 
 all: $(DESTDIR)/$(BINARY_NAME)

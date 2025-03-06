@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/brendank310/aztui/pkg/azcli"
+	"github.com/brendank310/aztui/pkg/config"
 	"github.com/brendank310/aztui/pkg/consoles"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -35,21 +36,40 @@ func NewVirtualMachineListView(appLayout *AppLayout, subscriptionID string, reso
 		List: tview.NewList(),
 	}
 
-	title := fmt.Sprintf("Virtual Machines (%v)", "F4")
+	appLayout.FocusedViewIndex = 2
+
+	title := fmt.Sprintf("Virtual Machines (F%v)", appLayout.FocusedViewIndex+1)
 
 	vm.List.SetBorder(true)
 	vm.List.Box.SetTitle(title)
 	vm.List.ShowSecondaryText(true)
-	vm.ActionBarText = "## Subscription List(F1) ## | ## Resource Group List(F2) ## | ## Run Command(F5) ## | ## Serial Console (F7) ## | ## Exit(F12) ##"
+	vm.ActionBarText = ""
 	vm.SubscriptionID = subscriptionID
 	vm.ResourceGroup = resourceGroup
 	vm.Parent = appLayout
 
-	InitViewKeyBindings(&vm)
-
-	vm.Update()
+	vm.List.SetFocusFunc(func() {
+		InitViewKeyBindings(&vm)
+		vm.Update()
+		vm.UpdateActionBar(vm.Parent.ActionBar)
+	})
 
 	return &vm
+}
+
+func (v *VirtualMachineListView) UpdateActionBar(t *tview.TextView) {
+	actionBarText := ""
+	for _, view := range config.GConfig.Views {
+		if view.Name == v.Name() {
+			for _, action := range view.Actions {
+				actionBarText += fmt.Sprintf("%v(%v) | ", action.Description, action.Key)
+			}
+			actionBarText = actionBarText[:len(actionBarText)-3] // Remove the last " | "
+			break
+		}
+	}
+
+	t.SetText(actionBarText)
 }
 
 func (v *VirtualMachineListView) Name() string {

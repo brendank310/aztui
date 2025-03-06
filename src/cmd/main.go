@@ -50,10 +50,8 @@ func NewAzTuiState() *AzTuiState {
 
 	a.AppLayout.InputField.SetFinishedFunc(func(key tcell.Key) {
 		if a.FocusedViewIndex == 0 {
-			subscriptionList.UpdateList(a.AppLayout)
 			a.App.SetFocus(subscriptionList.List)
 		} else if a.FocusedViewIndex == 1 {
-			subscriptionList.ResourceGroupListView.UpdateList(a.AppLayout)
 			a.App.SetFocus(subscriptionList.ResourceGroupListView.List)
 		}
 	})

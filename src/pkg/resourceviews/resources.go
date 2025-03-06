@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/brendank310/aztui/pkg/config"
 	"github.com/brendank310/aztui/pkg/logger"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -37,23 +38,41 @@ func NewResourceListView(layout *AppLayout, subscriptionID, resourceGroup, resou
 
 	resourceList.ReadableName = strings.TrimPrefix(resourceType, "Microsoft.")
 
-	title := fmt.Sprintf("%v (%v)", resourceList.ReadableName, "F5")
+	layout.FocusedViewIndex = 4
+	title := fmt.Sprintf("%v (F%v)", resourceList.ReadableName, layout.FocusedViewIndex+1)
 
 	resourceList.List.SetBorder(true)
 	resourceList.List.Box.SetTitle(title)
 	resourceList.List.ShowSecondaryText(true)
-	resourceList.ActionBarText = "## Subscription List(F1) ## | ## Resource Group List(F2) ## | ## Resource Type List(F3) ## | ## Exit(F12) ##"
+	resourceList.ActionBarText = ""
 	resourceList.SubscriptionID = subscriptionID
 	resourceList.ResourceGroup = resourceGroup
 	resourceList.ResourceType = resourceType
 	resourceList.Parent = layout
 	layout.FocusedViewIndex = 3
 
-	InitViewKeyBindings(&resourceList)
-
-	resourceList.Update()
+	resourceList.List.SetFocusFunc(func() {
+		InitViewKeyBindings(&resourceList)
+		resourceList.Update()
+		resourceList.UpdateActionBar(resourceList.Parent.ActionBar)
+	})
 
 	return &resourceList
+}
+
+func (r *ResourceListView) UpdateActionBar(t *tview.TextView) {
+	actionBarText := ""
+	for _, view := range config.GConfig.Views {
+		if view.Name == r.Name() {
+			for _, action := range view.Actions {
+				actionBarText += fmt.Sprintf("%v(%v) | ", action.Description, action.Key)
+			}
+			actionBarText = actionBarText[:len(actionBarText)-3] // Remove the last " | "
+			break
+		}
+	}
+
+	t.SetText(actionBarText)
 }
 
 func (v *ResourceListView) Name() string {
@@ -77,6 +96,7 @@ func (v *ResourceListView) CallAction(action string) (tview.Primitive, error) {
 
 func (v *ResourceListView) AppendPrimitiveView(p tview.Primitive, takeFocus bool, width int) {
 	v.Parent.AppendPrimitiveView(p, takeFocus, width)
+	v.UpdateActionBar(v.Parent.ActionBar)
 }
 
 func (v *ResourceListView) SpawnResourceDetailView() tview.Primitive {

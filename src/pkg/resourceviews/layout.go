@@ -2,8 +2,10 @@ package resourceviews
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
+	"github.com/brendank310/aztui/pkg/config"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -30,8 +32,6 @@ type AppLayout struct {
 }
 
 func NewAppLayout() *AppLayout {
-	status := fmt.Sprintf("Status: %v", time.Now().String())
-
 	a := AppLayout{
 		App: tview.NewApplication(),
 		Grid: tview.NewGrid().
@@ -39,12 +39,20 @@ func NewAppLayout() *AppLayout {
 			SetRows(1, 1, -6, 1, 1).
 			SetBorders(true),
 		Layout:           tview.NewFlex(),
-		InputField:       tview.NewInputField().SetLabel("(F10) Filter: "),
+		InputField:       tview.NewInputField().SetLabel("Search:"),
 		titleBar:         tview.NewTextView().SetLabel("aztui"),
-		ActionBar:        tview.NewTextView().SetLabel("## Select(Enter) ## | ## Filter(F10) ## | ## Views(F1-F5) ## | ## Exit(Ctrl-C) ##"),
-		statusBar:        tview.NewTextView().SetLabel(status),
+		ActionBar:        tview.NewTextView().SetLabel(""),
+		statusBar:        tview.NewTextView().SetLabel(""),
 		FocusedViewIndex: 0,
 	}
+
+	go func() {
+		for {
+			time.Sleep(1 * time.Second)
+			a.statusBar.SetText(fmt.Sprintf("Status Bar: %v", time.Now().Format("15:04:05")))
+			a.App.Draw()
+		}
+	}()
 
 	a.Grid.AddItem(a.titleBar, 0, 0, 1, 4, 0, 100, false).
 		AddItem(a.InputField, 1, 0, 1, 4, 0, 100, true).
@@ -52,10 +60,29 @@ func NewAppLayout() *AppLayout {
 		AddItem(a.statusBar, 3, 0, 1, 4, 0, 100, false).
 		AddItem(a.ActionBar, 4, 0, 1, 4, 0, 100, false)
 	a.Layout.SetDirection(tview.FlexColumn)
-
 	InitViewKeyBindings(&a)
-
+	a.UpdateActionBar(a.ActionBar)
 	return &a
+}
+
+func (a *AppLayout) UpdateActionBar(t *tview.TextView) {
+	actionBarText := ""
+	for _, view := range config.GConfig.Views {
+		if view.Name == a.Name() {
+			for _, action := range view.Actions {
+				// Get the action name
+				name := action.Action
+
+				if !strings.HasPrefix(name, "FocusView") {
+					actionBarText += fmt.Sprintf("%v(%v) | ", action.Description, action.Key)
+				}
+			}
+			actionBarText = actionBarText[:len(actionBarText)-3] // Remove the last " | "
+			break
+		}
+	}
+
+	t.SetText(actionBarText)
 }
 
 func (a *AppLayout) Name() string {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/brendank310/aztui/pkg/config"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
@@ -39,14 +40,34 @@ func NewSubscriptionListView(appLayout *AppLayout) *SubscriptionListView {
 
 	s.List.SetBorder(true)
 	s.List.Box.SetTitle(title)
-	s.ActionBarText = "## Select(Enter) ## | ## Exit(F12) ##"
+	s.ActionBarText = ""
 	s.Parent = appLayout
 
-	InitViewKeyBindings(&s)
+	s.List.SetFocusFunc(func() {
+		InitViewKeyBindings(&s)
+		s.Update()
+		s.UpdateList(s.Parent)
+		s.Parent.InputField.SetText("")
+		s.UpdateActionBar(s.Parent.ActionBar)
+	})
 
-	s.Update()
 	appLayout.AppendPrimitiveView(s.List, true, 1)
 	return &s
+}
+
+func (s *SubscriptionListView) UpdateActionBar(t *tview.TextView) {
+	actionBarText := ""
+	for _, view := range config.GConfig.Views {
+		if view.Name == s.Name() {
+			for _, action := range view.Actions {
+				actionBarText += fmt.Sprintf("%v(%v) | ", action.Description, action.Key)
+			}
+			actionBarText = actionBarText[:len(actionBarText)-3] // Remove the last " | "
+			break
+		}
+	}
+
+	t.SetText(actionBarText)
 }
 
 func (s *SubscriptionListView) Name() string {
@@ -77,6 +98,7 @@ func (s *SubscriptionListView) SpawnResourceGroupListView() tview.Primitive {
 	s.Parent.RemoveViews(1)
 	rgList := NewResourceGroupListView(s.Parent, subscriptionID)
 	s.ResourceGroupListView = rgList
+	rgList.UpdateActionBar(rgList.Parent.ActionBar)
 	return rgList.List
 }
 
@@ -93,6 +115,7 @@ func (s *SubscriptionListView) Update() error {
 
 	// Initialize the subscription list
 	s.SubscriptionList = &[]SubscriptionInfo{}
+	s.List.Clear()
 
 	// List subscriptions
 	subPager := subClient.NewListPager(nil)

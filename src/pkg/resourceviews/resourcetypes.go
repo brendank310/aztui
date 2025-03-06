@@ -8,6 +8,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
+	"github.com/brendank310/aztui/pkg/config"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -47,11 +48,28 @@ func NewResourceTypeListView(layout *AppLayout, subscriptionID, resourceGroup st
 	rt.Parent = layout
 	layout.FocusedViewIndex = 2
 
-	InitViewKeyBindings(&rt)
-
-	rt.Update()
+	rt.List.SetFocusFunc(func() {
+		InitViewKeyBindings(&rt)
+		rt.Update()
+		rt.UpdateActionBar(rt.Parent.ActionBar)
+	})
 
 	return &rt
+}
+
+func (r *ResourceTypeListView) UpdateActionBar(t *tview.TextView) {
+	actionBarText := ""
+	for _, view := range config.GConfig.Views {
+		if view.Name == r.Name() {
+			for _, action := range view.Actions {
+				actionBarText += fmt.Sprintf("%v(%v) | ", action.Description, action.Key)
+			}
+			actionBarText = actionBarText[:len(actionBarText)-3] // Remove the last " | "
+			break
+		}
+	}
+
+	t.SetText(actionBarText)
 }
 
 func (r *ResourceTypeListView) Name() string {

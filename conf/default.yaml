@@ -5,65 +5,82 @@ views:
         takeFocus: true
         key: "Enter"
         width: 1
+        description: "List Resource Groups"
   - view: "ResourceGroupListView"
     actions:
       - action: "SpawnResourceTypeListView"
         takeFocus: true
         key: "Enter"
         width: 1
+        description: "List Resource Types"
       - action: "SpawnVirtualMachineListView"
         takeFocus: true
         key: "v"
         width: 1
+        description: "List Virtual Machines"
       - action: "SpawnAKSClusterListView"
         takeFocus: true
         key: "a"
         width: 1
+        description: "List AKS Clusters"
   - view: "VirtualMachineListView"
     actions:
       - action: "SpawnVirtualMachineDetailView"
         takeFocus: false
         key: "Enter"
         width: 3
+        description: "View Details"
       - action: "SpawnVirtualMachineCommandListView"
         takeFocus: true
         key: "c"
         width: 3
+        description: "Commands"
       - action: "SpawnVirtualMachineSerialConsoleView"
         takeFocus: true
         key: "s"
         width: 3
+        description: "Serial Console"
   - view: "AKSClusterListView"
     actions:
       - action: "SpawnAKSClusterDetailView"
         takeFocus: false
         key: "Enter"
         width: 3
+        description: "View Details"
   - view: "ResourceListView"
     actions:
       - action: "SpawnResourceDetailView"
         takeFocus: false
         key: "Enter"
         width: 3
+        description: "View Details"
   - view: "ResourceTypeListView"
     actions:
       - action: "SpawnResourceListView"
         takeFocus: true
         key: "Enter"
         width: 1
+        description: "List Resources"
   - view: "AppLayout"
     actions:
       - action: "Quit"
         key: "F12"
+        description: "Quit"
       - action: "FocusView0"
         key: "F1"
+        description: "Subscriptions"
       - action: "FocusView1"
         key: "F2"
+        description: "Resource Groups"
       - action: "FocusView2"
         key: "F3"
+        description: "Resource Types"
       - action: "FocusView3"
         key: "F4"
+        description: "Resources"
       - action: "FocusView4"
         key: "F5"
+        description: "Virtual Machines"
       - action: "FocusInputField"
-        key: "F10"
+        key: "/"
+        description: "Search"
