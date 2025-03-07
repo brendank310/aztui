@@ -31,7 +31,7 @@ jobs:
         docker cp $CONTAINER_ID:/workdir/rpmbuild/RPMS bin/RPMS
         docker rm -f $CONTAINER_ID
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: mariner-rpm
         path: bin/RPMS
