@@ -37,3 +37,8 @@ To install aztui, run the following commands:
 ```bash
 go install github.com/yourusername/aztui@latest
 ```
+
+To run from cloudshell, try the following:
+```bash
+rm -f aztui aztui.zip ./default.yaml && wget https://github.com/brendank310/aztui/releases/download/v0.0.5/aztui.zip && unzip aztui.zip && wget https://raw.githubusercontent.com/brendank310/aztui/refs/heads/main/conf/default.yaml && mkdir -p ~/.config && mv default.yaml ~/.config/aztui.yaml && chmod +x ./aztui && ./aztui
+```
