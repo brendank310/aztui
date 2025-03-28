@@ -2,7 +2,7 @@
 
 [![Go](https://github.com/brendank310/aztui/actions/workflows/go.yml/badge.svg)](https://github.com/brendank310/aztui/actions/workflows/go.yml)
 
-**aztui** is an open-source command-line tool that allows users to interact with their Azure resources using a text user interface (TUI). It provides a convenient way to manage Azure resources directly from the terminal, making it easy to monitor, manage, and perform actions on your resources without needing to use the Azure web portal.
+**aztui** is an open-source command-line tool that allows users to interact with their Azure resources using a text user interface (TUI). It provides a convenient way to manage Azure resources directly from the terminal.
 
 ## Features
 
@@ -24,11 +24,11 @@ Install the azcli and login using `az login`. Once logged in you can build and r
 
 ## Plan for feature development
 
-Mostly the feature development will be determined by how convenient the feature may be to my day to day use of Azure, though if there are features that enough people upvote as an issue I'll try to prioritize it.
+Mostly the feature development will be determined by how convenient the feature may be to my day-to-day use of Azure, though if there are features that enough people upvote as an issue, I'll try to prioritize them.
 
 ## Notice
 
-I (brendank310) do work for Microsoft on Azure, but this is a personal project done in my spare time as a tool for my convenience (I hope this is a bit more responsive than the web portal), as well as learning the tview library for other personal projects related to the [beepy device](https://beepy.sqfmi.com/).
+This is an unofficial project and is not associated with Microsoft. Use it at your own risk.
 
 ### Install aztui
 
@@ -40,5 +40,12 @@ go install github.com/yourusername/aztui@latest
 
 To run from cloudshell, try the following:
 ```bash
-rm -f aztui aztui.zip ./default.yaml && wget https://github.com/brendank310/aztui/releases/download/v0.0.5/aztui.zip && unzip aztui.zip && wget https://raw.githubusercontent.com/brendank310/aztui/refs/heads/main/conf/default.yaml && mkdir -p ~/.config && mv default.yaml ~/.config/aztui.yaml && chmod +x ./aztui && ./aztui
+rm -f aztui aztui.zip ./default.yaml && wget https://github.com/brendank310/aztui/releases/download/v0.0.5/aztui.zip && unzip aztui.zip && wget https://raw.githubusercontent.com/brendank310/aztui/refs[...]
 ```
+
+## Contributors
+
+- [ytimocin](https://github.com/ytimocin)
+- [dominikabobik](https://github.com/dominikabobik)
+- [brendank310](https://github.com/brendank310)
+- [rramankutty0](https://github.com/rramankutty0)
