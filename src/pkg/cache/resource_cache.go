@@ -3,6 +3,8 @@ package cache
 import (
 	"fmt"
 	"time"
+
+	"github.com/brendank310/aztui/pkg/tracing"
 )
 
 // ResourceCacheService provides caching for Azure resources
@@ -26,6 +28,30 @@ func (s *ResourceCacheService) GetOrFetch(key string, fetchFunc func() (interfac
 
 // GetOrFetchWithTTL retrieves data from cache or fetches it with custom TTL
 func (s *ResourceCacheService) GetOrFetchWithTTL(key string, ttl time.Duration, fetchFunc func() (interface{}, error)) (interface{}, error) {
+	tracer := tracing.GetTracer()
+	
+	if tracer.IsEnabled() {
+		// Use tracing wrapper when enabled
+		return tracer.TraceFunc("cache_lookup", key, func() (interface{}, bool, error) {
+			// Try to get from cache first
+			if cached, found := s.cache.Get(key); found {
+				return cached, true, nil
+			}
+			
+			// Not in cache, fetch the data
+			data, err := fetchFunc()
+			if err != nil {
+				return nil, false, err
+			}
+			
+			// Store in cache
+			s.cache.Set(key, data, ttl)
+			
+			return data, false, nil
+		})
+	}
+	
+	// Original implementation when tracing is disabled (no overhead)
 	// Try to get from cache first
 	if cached, found := s.cache.Get(key); found {
 		return cached, nil
