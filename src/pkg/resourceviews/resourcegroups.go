@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/brendank310/aztui/pkg/cache"
 	"github.com/brendank310/aztui/pkg/config"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -121,35 +122,76 @@ func (r *ResourceGroupListView) SpawnAKSClusterListView() tview.Primitive {
 }
 
 func (r *ResourceGroupListView) Update() error {
+	// Use cache service for resource group list
+	cacheService := GetCacheService()
+	if cacheService != nil {
+		cacheKey := cache.GenerateResourceGroupKey(r.SubscriptionID)
+		
+		// Try to get cached resource groups first
+		data, err := cacheService.GetOrFetch(cacheKey, func() (interface{}, error) {
+			return r.fetchResourceGroups()
+		})
+		
+		if err != nil {
+			return err
+		}
+		
+		// Cast the cached data back to the expected type
+		if resourceGroups, ok := data.([]ResourceGroupInfo); ok {
+			r.ResourceGroupList = &resourceGroups
+			r.populateList()
+			return nil
+		}
+	}
+	
+	// Fallback to direct fetch if cache service is not available
+	resourceGroups, err := r.fetchResourceGroups()
+	if err != nil {
+		return err
+	}
+	
+	r.ResourceGroupList = &resourceGroups
+	r.populateList()
+	return nil
+}
+
+// fetchResourceGroups fetches resource groups from Azure API
+func (r *ResourceGroupListView) fetchResourceGroups() ([]ResourceGroupInfo, error) {
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
-		return fmt.Errorf("failed to obtain a credential: %v", err)
+		return nil, fmt.Errorf("failed to obtain a credential: %v", err)
 	}
 
-	r.List.Clear()
 	rgClient, err := armresources.NewResourceGroupsClient(r.SubscriptionID, cred, nil)
 	if err != nil {
-		return fmt.Errorf("failed to create resource groups client: %v", err)
+		return nil, fmt.Errorf("failed to create resource groups client: %v", err)
 	}
 
-	r.ResourceGroupList = &[]ResourceGroupInfo{}
+	var resourceGroups []ResourceGroupInfo
 
 	rgPager := rgClient.NewListPager(nil)
 	for rgPager.More() {
 		ctx := context.Background()
 		page, err := rgPager.NextPage(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to get next resource groups page: %v", err)
+			return nil, fmt.Errorf("failed to get next resource groups page: %v", err)
 		}
 		for _, rg := range page.Value {
 			resourceGroup := *rg.Name
 			location := *rg.Location
-			*r.ResourceGroupList = append(*r.ResourceGroupList, ResourceGroupInfo{resourceGroup, location})
-			r.List.AddItem(resourceGroup, location, 0, nil)
+			resourceGroups = append(resourceGroups, ResourceGroupInfo{resourceGroup, location})
 		}
 	}
 
-	return nil
+	return resourceGroups, nil
+}
+
+// populateList populates the UI list with resource group data
+func (r *ResourceGroupListView) populateList() {
+	r.List.Clear()
+	for _, resourceGroupInfo := range *r.ResourceGroupList {
+		r.List.AddItem(resourceGroupInfo.ResourceGroupName, resourceGroupInfo.ResourceGroupLocation, 0, nil)
+	}
 }
 
 func (r *ResourceGroupListView) UpdateList(layout *AppLayout) error {

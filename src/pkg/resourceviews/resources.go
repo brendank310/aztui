@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/brendank310/aztui/pkg/cache"
 	"github.com/brendank310/aztui/pkg/config"
 	"github.com/brendank310/aztui/pkg/logger"
 	"github.com/gdamore/tcell/v2"
@@ -153,18 +154,49 @@ func (v *ResourceListView) SpawnResourceDetailView() tview.Primitive {
 }
 
 func (v *ResourceListView) Update() error {
+	// Use cache service for resource list
+	cacheService := GetCacheService()
+	if cacheService != nil {
+		cacheKey := cache.GenerateResourceKey(v.SubscriptionID, v.ResourceGroup, v.ResourceType)
+		
+		// Try to get cached resources first
+		data, err := cacheService.GetOrFetch(cacheKey, func() (interface{}, error) {
+			return v.fetchResources()
+		})
+		
+		if err != nil {
+			return err
+		}
+		
+		// Cast the cached data back to the expected type
+		if resources, ok := data.([]*armresources.GenericResourceExpanded); ok {
+			v.populateList(resources)
+			return nil
+		}
+	}
+	
+	// Fallback to direct fetch if cache service is not available
+	resources, err := v.fetchResources()
+	if err != nil {
+		return err
+	}
+	
+	v.populateList(resources)
+	return nil
+}
+
+// fetchResources fetches resources from Azure API
+func (v *ResourceListView) fetchResources() ([]*armresources.GenericResourceExpanded, error) {
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
-		return fmt.Errorf("failed to obtain a credential: %v", err)
+		return nil, fmt.Errorf("failed to obtain a credential: %v", err)
 	}
-
-	v.List.Clear()
 
 	ctx := context.Background()
 
 	resourcesClient, err := armresources.NewClient(v.SubscriptionID, cred, nil)
 	if err != nil {
-		logger.Println("failed to create resources client: ", err)
+		return nil, fmt.Errorf("failed to create resources client: %v", err)
 	}
 
 	filter := fmt.Sprintf("resourceType eq '%s'", v.ResourceType)
@@ -176,20 +208,31 @@ func (v *ResourceListView) Update() error {
 
 	pager := resourcesClient.NewListByResourceGroupPager(v.ResourceGroup, options)
 
-	if !pager.More() {
-		v.List.AddItem(fmt.Sprintf("(No %v in resource group)", v.ResourceType), "", 0, nil)
-	}
+	var resources []*armresources.GenericResourceExpanded
 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
 			logger.Println("failed to get the next page of", v.ResourceType, ":", err)
+			return nil, err
 		}
 
-		for _, resource := range page.Value {
-			v.List.AddItem(*resource.Name, *resource.Location, 0, nil)
-		}
+		resources = append(resources, page.Value...)
 	}
 
-	return nil
+	return resources, nil
+}
+
+// populateList populates the UI list with resource data
+func (v *ResourceListView) populateList(resources []*armresources.GenericResourceExpanded) {
+	v.List.Clear()
+
+	if len(resources) == 0 {
+		v.List.AddItem(fmt.Sprintf("(No %v in resource group)", v.ResourceType), "", 0, nil)
+		return
+	}
+
+	for _, resource := range resources {
+		v.List.AddItem(*resource.Name, *resource.Location, 0, nil)
+	}
 }

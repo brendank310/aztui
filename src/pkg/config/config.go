@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -19,8 +20,21 @@ type View struct {
 	Actions []Action `yaml:"actions"`
 }
 
+type CacheConfig struct {
+	TTLSeconds int `yaml:"ttlSeconds"`
+}
+
 type Config struct {
-	Views []View `yaml:"views"`
+	Views []View      `yaml:"views"`
+	Cache CacheConfig `yaml:"cache"`
+}
+
+// GetCacheTTL returns the cache TTL as a time.Duration
+func (c *Config) GetCacheTTL() time.Duration {
+	if c.Cache.TTLSeconds <= 0 {
+		return 5 * time.Minute // Default to 5 minutes
+	}
+	return time.Duration(c.Cache.TTLSeconds) * time.Second
 }
 
 var GConfig Config

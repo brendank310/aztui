@@ -35,3 +35,53 @@ jobs:
       with:
         name: mariner-rpm
         path: bin/RPMS
+
+  performance-benchmark:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.20'
+    - name: Install dependencies for benchmarking
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jq bc
+    - name: Run performance benchmarks
+      run: |
+        # Set up environment
+        mkdir -p bin perf-results
+        export AZTUI_CONFIG_PATH=$PWD/conf/default.yaml
+        export PERF_ITERATIONS=3
+        
+        # Run the performance benchmark script
+        ./scripts/perf-benchmark.sh
+      env:
+        AZTUI_CONFIG_PATH: ${{ github.workspace }}/conf/default.yaml
+        PERF_ITERATIONS: 3
+    - name: Upload performance benchmark results
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-benchmarks
+        path: perf-results/
+    - name: Display performance summary
+      run: |
+        echo "=== Performance Benchmark Summary ==="
+        if [ -d "perf-results" ]; then
+          # Find the latest comparison file
+          COMPARISON_FILE=$(find perf-results -name "comparison_*.json" | sort | tail -1)
+          if [ -f "$COMPARISON_FILE" ]; then
+            echo "📊 Performance Results:"
+            echo "Cache Hit Ratio: $(jq -r '.cache_statistics.hit_ratio * 100 | floor')%"
+            echo "Average Speedup: $(jq -r '.improvements.average_speedup')x"
+            echo "Total Speedup: $(jq -r '.improvements.total_speedup')x"
+            echo ""
+            echo "📈 Detailed metrics available in artifacts"
+          else
+            echo "⚠️ No comparison results found"
+          fi
+        else
+          echo "⚠️ No benchmark results directory found"
+        fi
