@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/brendank310/aztui/pkg/cache"
 	"github.com/brendank310/aztui/pkg/config"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -121,41 +122,81 @@ func (v *AKSClusterListView) SpawnAKSClusterDetailView() tview.Primitive {
 }
 
 func (v *AKSClusterListView) Update() error {
+	// Use cache service for AKS cluster list
+	cacheService := GetCacheService()
+	if cacheService != nil {
+		cacheKey := cache.GenerateAKSKey(v.SubscriptionID, v.ResourceGroup)
+		
+		// Try to get cached AKS clusters first
+		data, err := cacheService.GetOrFetch(cacheKey, func() (interface{}, error) {
+			return v.fetchAKSClusters()
+		})
+		
+		if err != nil {
+			return err
+		}
+		
+		// Cast the cached data back to the expected type
+		if clusters, ok := data.([]*armcontainerservice.ManagedCluster); ok {
+			v.populateList(clusters)
+			return nil
+		}
+	}
+	
+	// Fallback to direct fetch if cache service is not available
+	clusters, err := v.fetchAKSClusters()
+	if err != nil {
+		return err
+	}
+	
+	v.populateList(clusters)
+	return nil
+}
+
+// fetchAKSClusters fetches AKS clusters from Azure API
+func (v *AKSClusterListView) fetchAKSClusters() ([]*armcontainerservice.ManagedCluster, error) {
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
-		return fmt.Errorf("failed to obtain a credential: %v", err)
+		return nil, fmt.Errorf("failed to obtain a credential: %v", err)
 	}
 
-	v.List.Clear()
 	// Create a context
 	ctx := context.Background()
 
 	// Create a client to interact with AKS
 	client, err := armcontainerservice.NewManagedClustersClient(v.SubscriptionID, cred, nil)
 	if err != nil {
-		log.Fatalf("failed to create AKS client: %v", err)
+		return nil, fmt.Errorf("failed to create AKS client: %v", err)
 	}
+
+	var clusters []*armcontainerservice.ManagedCluster
 
 	// List AKS clusters in the specified resource group
 	clusterListPager := client.NewListByResourceGroupPager(v.ResourceGroup, nil)
-
-	// Check if the pager is empty
-	if !clusterListPager.More() {
-		v.List.AddItem("(No AKS clusters in resource group)", "", 0, nil)
-	}
 
 	// Iterate through the pager to fetch all AKS clusters
 	for clusterListPager.More() {
 		page, err := clusterListPager.NextPage(ctx)
 		if err != nil {
-			log.Fatalf("failed to get the next page of AKS clusters: %v", err)
+			return nil, fmt.Errorf("failed to get the next page of AKS clusters: %v", err)
 		}
 
-		// Loop through the AKS clusters and print their details
-		for _, cluster := range page.Value {
-			v.List.AddItem(*cluster.Name, *cluster.Properties.KubernetesVersion, 0, nil)
-		}
+		clusters = append(clusters, page.Value...)
 	}
 
-	return nil
+	return clusters, nil
+}
+
+// populateList populates the UI list with AKS cluster data
+func (v *AKSClusterListView) populateList(clusters []*armcontainerservice.ManagedCluster) {
+	v.List.Clear()
+
+	if len(clusters) == 0 {
+		v.List.AddItem("(No AKS clusters in resource group)", "", 0, nil)
+		return
+	}
+
+	for _, cluster := range clusters {
+		v.List.AddItem(*cluster.Name, *cluster.Properties.KubernetesVersion, 0, nil)
+	}
 }

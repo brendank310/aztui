@@ -7,6 +7,7 @@ import (
 	_ "strings"
 
 	_ "github.com/brendank310/aztui/pkg/azcli"
+	"github.com/brendank310/aztui/pkg/cache"
 	"github.com/brendank310/aztui/pkg/config"
 	"github.com/brendank310/aztui/pkg/logger"
 	"github.com/brendank310/aztui/pkg/resourceviews"
@@ -19,6 +20,7 @@ type AzTuiState struct {
 	// Basic TUI variables
 	*resourceviews.AppLayout
 	config.Config
+	CacheService *cache.ResourceCacheService
 }
 
 func NewAzTuiState() *AzTuiState {
@@ -38,10 +40,17 @@ func NewAzTuiState() *AzTuiState {
 		panic(err)
 	}
 
+	// Initialize cache service with configured TTL
+	cacheService := cache.NewResourceCacheService(c.GetCacheTTL())
+
 	a := AzTuiState{
-		AppLayout: resourceviews.NewAppLayout(),
-		Config:    c,
+		AppLayout:    resourceviews.NewAppLayout(),
+		Config:       c,
+		CacheService: cacheService,
 	}
+
+	// Initialize cache service globally for views to use
+	resourceviews.SetCacheService(cacheService)
 
 	subscriptionList := resourceviews.NewSubscriptionListView(a.AppLayout)
 	if subscriptionList == nil {

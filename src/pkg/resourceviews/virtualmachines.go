@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/brendank310/aztui/pkg/azcli"
+	"github.com/brendank310/aztui/pkg/cache"
 	"github.com/brendank310/aztui/pkg/config"
 	"github.com/brendank310/aztui/pkg/consoles"
 	"github.com/gdamore/tcell/v2"
@@ -204,35 +205,77 @@ func (v *VirtualMachineListView) SpawnVirtualMachineCommandListView() tview.Prim
 }
 
 func (v *VirtualMachineListView) Update() error {
+	// Use cache service for virtual machine list
+	cacheService := GetCacheService()
+	if cacheService != nil {
+		cacheKey := cache.GenerateVMKey(v.SubscriptionID, v.ResourceGroup)
+		
+		// Try to get cached VMs first
+		data, err := cacheService.GetOrFetch(cacheKey, func() (interface{}, error) {
+			return v.fetchVirtualMachines()
+		})
+		
+		if err != nil {
+			return err
+		}
+		
+		// Cast the cached data back to the expected type
+		if vms, ok := data.([]*armcompute.VirtualMachine); ok {
+			v.populateList(vms)
+			return nil
+		}
+	}
+	
+	// Fallback to direct fetch if cache service is not available
+	vms, err := v.fetchVirtualMachines()
+	if err != nil {
+		return err
+	}
+	
+	v.populateList(vms)
+	return nil
+}
+
+// fetchVirtualMachines fetches virtual machines from Azure API
+func (v *VirtualMachineListView) fetchVirtualMachines() ([]*armcompute.VirtualMachine, error) {
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
-		return fmt.Errorf("failed to obtain a credential: %v", err)
+		return nil, fmt.Errorf("failed to obtain a credential: %v", err)
 	}
 
-	v.List.Clear()
 	vmClient, err := armcompute.NewVirtualMachinesClient(v.SubscriptionID, cred, nil)
 	if err != nil {
-		log.Fatalf("failed to create virtual machines client: %v", err)
+		return nil, fmt.Errorf("failed to create virtual machines client: %v", err)
 	}
+
+	var vms []*armcompute.VirtualMachine
 
 	vmPager := vmClient.NewListPager(v.ResourceGroup, nil)
 	for vmPager.More() {
 		ctx := context.Background()
 		page, err := vmPager.NextPage(ctx)
 		if err != nil {
-			log.Fatalf("failed to get next virtual machines page: %v", err)
+			return nil, fmt.Errorf("failed to get next virtual machines page: %v", err)
 		}
 
-		if len(page.Value) == 0 && !vmPager.More() {
-			v.List.AddItem("(No VMs in resource group)", "", 0, nil)
-		}
-
-		for _, vm := range page.Value {
-			vmName := *vm.Name
-			vmLocation := *vm.Location
-			v.List.AddItem(vmName, vmLocation, 0, nil)
-		}
+		vms = append(vms, page.Value...)
 	}
 
-	return nil
+	return vms, nil
+}
+
+// populateList populates the UI list with virtual machine data
+func (v *VirtualMachineListView) populateList(vms []*armcompute.VirtualMachine) {
+	v.List.Clear()
+
+	if len(vms) == 0 {
+		v.List.AddItem("(No VMs in resource group)", "", 0, nil)
+		return
+	}
+
+	for _, vm := range vms {
+		vmName := *vm.Name
+		vmLocation := *vm.Location
+		v.List.AddItem(vmName, vmLocation, 0, nil)
+	}
 }

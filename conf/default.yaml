@@ -1,3 +1,6 @@
+cache:
+  ttlSeconds: 300  # 5 minutes cache TTL
+
 views:
   - view: "SubscriptionListView"
     actions:
